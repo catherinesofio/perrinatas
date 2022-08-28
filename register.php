@@ -12,7 +12,7 @@
         return ($num_rows > 0);
     }
 
-    function create_user($type, $name, $username, $password) {
+    function create_user($type, $username, $password) {
         global $conn;
 
         if (user_exists($username)) {
@@ -31,11 +31,10 @@
 
     if (isset($_POST["type"])) {
         $type = $_REQUEST["type"];
-        $name = $_REQUEST["name"];
         $username = $_REQUEST["username"];
         $password = $_REQUEST["password"];
 
-        create_user($type, $name, $username, $password);
+        create_user($type, $username, $password);
     }
 ?>
 
@@ -94,14 +93,6 @@
                         <option value="owner" selected>🚶 Paseadores de perritos</option>
                         <option value="walker">🐕 Perritos para pasear</option>
                     </select>
-                </fieldset>
-
-                <fieldset class="input-group mb-1">
-                    <div class="input-group-prepend">
-                        <label class="input-group-text" for="name">Nombre</label>
-                    </div>
-
-                    <input id="name" class="form-control" name="name" type="text" placeholder="Nombre" required />
                 </fieldset>
 
                 <fieldset class="input-group mb-1">

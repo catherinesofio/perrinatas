@@ -6,7 +6,7 @@ CREATE TABLE `user` (id int NOT NULL AUTO_INCREMENT, type ENUM('owner', 'walker'
 
 CREATE TABLE dog (id int NOT NULL AUTO_INCREMENT, user_id INT NOT NULL, FOREIGN KEY (user_id) REFERENCES user(id), PRIMARY KEY (id));
 
-CREATE TABLE profile_walker (user_id INT NOT NULL, name varchar(25) NOT NULL, photo varchar(255) NOT NULL, description varchar(255) NOT NULL, location varchar(255) NOT NULL, schedule varchar(255) NOT NULL, price_range varchar(255) NOT NULL, FOREIGN KEY (user_id) REFERENCES user(id));
+CREATE TABLE profile_walker (user_id INT NOT NULL, name varchar(25) NOT NULL, photo varchar(255) NOT NULL, description varchar(255) NOT NULL, location varchar(255) NOT NULL, schedule varchar(255) NOT NULL, price INT NOT NULL, FOREIGN KEY (user_id) REFERENCES user(id));
 
 CREATE TABLE profile_dog (dog_id INT NOT NULL, name varchar(25) NOT NULL, photos varchar(255) NOT NULL, description varchar(255) NOT NULL, location varchar(255) NOT NULL, schedule varchar(255) NOT NULL, FOREIGN KEY (dog_id) REFERENCES dog(id));
 

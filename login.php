@@ -33,9 +33,9 @@
         }
     }
 
-    if (isset($_POST['username'])) {
-        $username = $_REQUEST['username'];
-        $password = $_REQUEST['password'];
+    if (isset($_POST["username"])) {
+        $username = $_REQUEST["username"];
+        $password = $_REQUEST["password"];
 
         login_user($username, $password);
     }

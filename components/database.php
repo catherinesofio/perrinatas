@@ -1,5 +1,5 @@
 <?php
-    if ($_SERVER['REQUEST_URI'] == "/perrinatas/database.php") {
+    if ($_SERVER["REQUEST_URI"] == "/perrinatas/database.php") {
         header("Location: index.html");
     }
 
