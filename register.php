@@ -12,19 +12,7 @@
         return ($num_rows > 0);
     }
 
-    function get_user_id($username) {
-        global $conn;
-
-        $query = "SELECT * FROM `user` WHERE user.username = '$username';";
-        $mysql_result = $conn->query($query);
-
-        $row = $mysql_result->fetch_row();
-        $id = $row[0];
-
-        return $id;
-    }
-
-    function create_user($type, $name, $username, $password, $latitude, $longitude) {
+    function create_user($type, $name, $username, $password) {
         global $conn;
 
         if (user_exists($username)) {
@@ -34,30 +22,20 @@
         }
 
         try {
-            $query = "INSERT INTO `user` (type, username, password, location) VALUES ('$type', '$username', '$password', '{''latitude'': $latitude, ''longitude'': $longitude}');";
+            $query = "INSERT INTO `user` (type, username, password) VALUES ('$type', '$username', '$password');";
             $mysql_result = $conn->query($query);
-
-            $id = get_user_id($username);
-            
-            if ($type == "walker") {
-                $query = "INSERT INTO profile_walker (user_id, name, photo, description, schedule, price_range) VALUES ($id, '$name', 'default-person.jpg', '', '{''days'': [], ''hours'': []}', '{''min'': 0, ''max'': 0}');";
-                echo $query;
-                $mysql_result = $conn->query($query);
-            }
         } catch (Exception $error) {
             echo "No se pudo crear el usuario";
         }
     }
 
-    if (isset($_POST["latitude"])) {
+    if (isset($_POST["type"])) {
         $type = $_REQUEST["type"];
         $name = $_REQUEST["name"];
         $username = $_REQUEST["username"];
         $password = $_REQUEST["password"];
-        $latitude = $_REQUEST["latitude"];
-        $longitude = $_REQUEST["longitude"];
 
-        create_user($type, $name, $username, $password, $latitude, $longitude);
+        create_user($type, $name, $username, $password);
     }
 ?>
 
@@ -74,7 +52,7 @@
         <meta name="description" content="Perrinatas - Servicio de Paseo de Perros" />
         
         <!-- Stylesheet -->
-        <link rel="stylesheet" href="/css/style.css" />
+        <link rel="stylesheet" href="/perrinatas/css/style.css" />
 
         <!-- Bootstrap CSS -->
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" />
@@ -107,20 +85,12 @@
             <form id="register" class="form" name="register" method="POST">
                 <legend>Registrarse</legend>
 
-                <input id="latitude" name="latitude" type="text" hidden required>
-                <input id="longitude" name="longitude" type="text" hidden required>
-
-                <!-- Coordinates -->
-                <script type="text/javascript" src="/perrinatas/scripts/coordinates.js">
-                    get_user_coordinates();
-                </script>
-
                 <fieldset class="input-group mb-1">
                     <div class="input-group-prepend">
                         <label class="input-group-text" for="type">¿Qué buscas?</label>
                     </div>
 
-                    <select id="type" class="form-control" name="type" placeholder="Nombre" required>
+                    <select id="type" class="form-control" name="type" placeholder="Nombre" required />
                         <option value="owner" selected>🚶 Paseadores de perritos</option>
                         <option value="walker">🐕 Perritos para pasear</option>
                     </select>
@@ -131,7 +101,7 @@
                         <label class="input-group-text" for="name">Nombre</label>
                     </div>
 
-                    <input id="name" class="form-control" name="name" type="text" placeholder="Nombre" required>
+                    <input id="name" class="form-control" name="name" type="text" placeholder="Nombre" required />
                 </fieldset>
 
                 <fieldset class="input-group mb-1">
@@ -139,7 +109,7 @@
                         <label class="input-group-text" for="username">@</label>
                     </div>
 
-                    <input id="username" class="form-control" name="username" type="text" placeholder="Usuario" required>
+                    <input id="username" class="form-control" name="username" type="text" placeholder="Usuario" required />
                 </fieldset>
 
                 <fieldset class="input-group mb-1">
@@ -149,12 +119,11 @@
                         </label>
                     </div>
 
-                    <input id="password" class="form-control" name="password" type="password" placeholder="Contraseña" required>
+                    <input id="password" class="form-control" name="password" type="password" placeholder="Contraseña" required />
 
                     <div class="input-group-append">
-                        <button class="btn btn-primary" type="button">
+                        <button id="toggle-password" class="btn btn-primary" type="button" hide="true" onclick="toggle_password()">
                             <i class="fa-solid fa-eye" title="Mostrar"></i>
-                            <i class="fa-solid fa-eye-slash" title="Ocultar"></i>
                         </button>
                     </div>
                 </fieldset>
@@ -163,9 +132,9 @@
             </form>
         </div>
         
-        <!-- Session Storage -->
-        <script type="text/javascript" src="/perrinatas/scripts/session_storage.js"></script>
-        
+        <!-- Utils -->
+        <script type="text/javascript" src="/perrinatas/scripts/utils.js"></script>
+
         <!-- Bootstrap JavaScript -->
         <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
         <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>

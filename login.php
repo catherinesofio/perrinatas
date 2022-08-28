@@ -23,8 +23,9 @@
                 $_SESSION["username"] = $username;
                 $_SESSION["type"] = $type;
 
-                echo "<script type='text/javascript'>
-                    login($id, $username, $type);
+                echo "<script type='text/javascript' src='/perrinatas/scripts/session_storage.js'></script>
+                <script type='text/javascript'>
+                    login($id, '$username', '$type');
                 </script>";
             }
         } else {
@@ -80,7 +81,7 @@
         </nav>
 
         <div id="main" class="container">
-            <form class="form" action="" method="post">
+            <form class="form" action="" name="login" method="POST">
                 <legend>Iniciar Sesión</legend>
 
                 <fieldset class="input-group mb-1">
@@ -88,7 +89,7 @@
                         <label class="input-group-text" for="username">@</label>
                     </div>
 
-                    <input id="username" class="form-control" name="username" type="text" placeholder="Usuario" required>
+                    <input id="username" class="form-control" name="username" type="text" placeholder="Usuario" required />
                 </fieldset>
 
                 <fieldset class="input-group mb-1">
@@ -98,15 +99,21 @@
                         </label>
                     </div>
 
-                    <input id="password" class="form-control" name="password" type="password" placeholder="Contraseña" required>
+                    <input id="password" class="form-control" name="password" type="password" placeholder="Contraseña" required />
+
+                    <div class="input-group-append">
+                        <button id="toggle-password" class="btn btn-primary" type="button" hide="true" onclick="toggle_password()">
+                            <i class="fa-solid fa-eye" title="Mostrar"></i>
+                        </button>
+                    </div>
                 </fieldset>
 
                 <button id="submit" class="btn btn-primary" name="submit" type="submit" value="INICIAR SESION">INICIAR SESION</button>
             </form>
         </div>
         
-        <!-- Session Storage -->
-        <script type="text/javascript" src="/perrinatas/scripts/session_storage.js"></script>
+        <!-- Utils -->
+        <script type="text/javascript" src="/perrinatas/scripts/utils.js"></script>
 
         <!-- Bootstrap JavaScript -->
         <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
