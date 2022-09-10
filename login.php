@@ -58,11 +58,14 @@
 
         <!-- FontAwesome CSS -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.2/css/all.min.css" integrity="sha512-1sCRPdkRXhBV2PBLUdRb4tMg1w2YPf37qatUFeS7zlBy7jJI8Lf4VHwWfZZfpXtYSLy85pkm9GaYVYMfw5BC1A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+        
+        <!-- Stylesheet -->
+        <link rel="stylesheet" href="/perrinatas/css/style.css" />
     </head>
 
     <body>
         <nav class="navbar navbar-expand-lg">
-            <a class="navbar-brand" href="">🐕 Perrinatas</a>
+            <a class="navbar-brand" href=""><i class="fa-solid fa-paw"></i> Perrinatas</a>
             
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navigation" aria-controls="navigation" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>

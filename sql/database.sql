@@ -8,7 +8,7 @@ CREATE TABLE dog (id int NOT NULL AUTO_INCREMENT, user_id INT NOT NULL, FOREIGN 
 
 CREATE TABLE profile_walker (user_id INT NOT NULL, name varchar(25) NOT NULL, photo varchar(255) NOT NULL, description varchar(255) NOT NULL, location varchar(255) NOT NULL, schedule varchar(255) NOT NULL, price INT NOT NULL, FOREIGN KEY (user_id) REFERENCES user(id));
 
-CREATE TABLE profile_dog (dog_id INT NOT NULL, name varchar(25) NOT NULL, photos varchar(255) NOT NULL, description varchar(255) NOT NULL, location varchar(255) NOT NULL, schedule varchar(255) NOT NULL, FOREIGN KEY (dog_id) REFERENCES dog(id));
+CREATE TABLE profile_dog (dog_id INT NOT NULL, name varchar(25) NOT NULL, photo varchar(255) NOT NULL, description varchar(255) NOT NULL, sex ENUM('f', 'm'), breed varchar(255) NOT NULL, size ENUM('S', 'M', 'XL'), location varchar(255) NOT NULL, FOREIGN KEY (dog_id) REFERENCES dog(id));
 
 CREATE TABLE `match` (user_id INT NOT NULL, dog_id INT NOT NULL, timestamp datetime NOT NULL, chat BLOB NOT NULL, FOREIGN KEY (user_id) REFERENCES dog(user_id), FOREIGN KEY (dog_id) REFERENCES dog(id));
 

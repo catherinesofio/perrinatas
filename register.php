@@ -49,20 +49,20 @@
         <meta name="author" content="Catalina Sofio Avogadro" />
         <meta name="keywords" content="Perrinatas,Canes,Perros,Perritos,Caminatas,Paseadores,Paseo de perros,Amantes de animales,Trabaja como paseador,Dueños de Perros" />
         <meta name="description" content="Perrinatas - Servicio de Paseo de Perros" />
-        
-        <!-- Stylesheet -->
-        <link rel="stylesheet" href="/perrinatas/css/style.css" />
 
         <!-- Bootstrap CSS -->
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" />
 
         <!-- FontAwesome CSS -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.2/css/all.min.css" integrity="sha512-1sCRPdkRXhBV2PBLUdRb4tMg1w2YPf37qatUFeS7zlBy7jJI8Lf4VHwWfZZfpXtYSLy85pkm9GaYVYMfw5BC1A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+        
+        <!-- Stylesheet -->
+        <link rel="stylesheet" href="/perrinatas/css/style.css" />
     </head>
 
     <body>
         <nav class="navbar navbar-expand-lg">
-            <a class="navbar-brand" href="">🐕 Perrinatas</a>
+            <a class="navbar-brand" href=""><i class="fa-solid fa-paw"></i> Perrinatas</a>
             
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navigation" aria-controls="navigation" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>

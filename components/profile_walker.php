@@ -1,4 +1,7 @@
 <?php
+    // INSERT INTO profile_walker (user_id, name, photo, description, location, schedule, price) VALUES (1, "Cinnamon Roll", "default-person", "La Gabbie Hannah necesita ayuda, pobre.", "{'latitude': 50, 'longitude': 10}", "{ 'days': ['monday'], 'hours': ['5 AM', '12 PM'] }", 200);
+
+    // Get profile data
     function get_profile() {
         global $conn,$name,$photo,$description,$days,$hours,$price,$location;
 
@@ -13,20 +16,31 @@
             $name = $row[0];
             $photo = $row[1];
             $description = $row[2];
-            $schedule = $row[3];
+            $schedule = json_decode($row[3], true);
+            $days = $schedule["days"];
+            $hours = $schedule["hours"];
             $price = $row[4];
-            $location = $row[5];
+            $location = json_decode($row[5], true);
         } else {
             $name = $_SESSION["username"];
-            $photo = "imgs/default-person.jpg";
+            $photo = "default-person.jpg";
             $description = "";
-            $days = array("monday", "friday");
-            $hours= array(7,5);
-            $price = 200;
+            $days = array();
+            $hours= array();
+            $price = 1;
             $location = array();
         }
     }
     
+    // Update photo preview
+    if (isset($_GET["photo"])) {
+        global $photo;
+
+        $photo = $_REQUEST["photo"];
+        echo $photo;
+    }
+    
+    // Update location preview
     if (isset($_GET["latitude"])) {
         global $location;
 
@@ -52,12 +66,12 @@
                 <div class="col-5">
                     <!-- Profile Picture -->
                     <fieldset class="mb-1">
-                        <img src="<?php echo $photo; ?>" alt="Foto de Perfil" />
-                        
+                        <img id="photo-preview" class="profile-photo" src="imgs/<?php echo $photo; ?>" alt="Foto de Perfil" />
+                    
                         <div class="custom-file">
-                            <input id="photo" name="photo" class="custom-file-input" type="file" />
+                            <input id="photo" class="custom-file-input" name="photo" type="file" lang="es" value="<?php echo $photo; ?>" />
                             
-                            <label class="custom-file-label" for="customFileLang">Seleccionar Archivo</label>
+                            <label class="custom-file-label" for="photo"><?php echo $photo; ?></label>
                         </div>
                     </fieldset>
 
@@ -141,7 +155,7 @@
                                         $display = "$h:00";
                                     }
 
-                                    $selected = in_array($h, $hours) ? "selected" : "";
+                                    $selected = in_array($display, $hours) ? "selected" : "";
 
                                     echo "<option id='hours' value='$h' $selected>$display</option>";
                                 }
@@ -155,7 +169,7 @@
                             <label class="input-group-text" for="location">Ubicación</label>
                         </div>
 
-                        <input id="location" class="form-control" name="location" type="text" placeholder="Mi ubicacion guardada" disabled />
+                        <input id="location" class="form-control" name="location" type="text" placeholder="<?php echo $location["name"]; ?>" disabled />
                     </fieldset>
                         
                     <?php
@@ -170,5 +184,25 @@
 
             <button id="submit" class="btn btn-primary" name="submit" type="button" value="GUARDAR CAMBIOS" onclick="get_map_coordinates();">GUARDAR CAMBIOS</button>
         </form>
+
+        <!-- Update Photo Preview -->
+        <script type="text/javascript">
+            function update_photo_preview(e) {
+                preview = document.getElementById("photo-preview");
+                photo = document.queryselector("input[type=file]");
+                path = photo.files[0].path
+                console.log(path);
+                
+                //photo.setAttribute("src", "");
+
+                //history.replaceState(null, null, `?photo=${e.target.value}`);6
+            }
+
+            window.addEventListener("load", () => {
+                photo = document.getElementById("photo");
+                
+                photo.onchange = update_photo_preview;
+            });
+        </script>
     </body>
 </html>
