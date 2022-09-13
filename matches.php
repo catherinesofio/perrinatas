@@ -5,12 +5,14 @@
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="es">
     <head>
         <title>Perrinatas - Conexiones</title>
 
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        
+        <link rel="icon" type="image/x-icon" href="img/favicon.ico">
 
         <meta name="author" content="Catalina Sofio Avogadro" />
         <meta name="keywords" content="Perrinatas,Canes,Perros,Perritos,Caminatas,Paseadores,Paseo de perros,Amantes de animales,Trabaja como paseador,Dueños de Perros" />
@@ -21,67 +23,96 @@
 
         <!-- FontAwesome CSS -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.2/css/all.min.css" integrity="sha512-1sCRPdkRXhBV2PBLUdRb4tMg1w2YPf37qatUFeS7zlBy7jJI8Lf4VHwWfZZfpXtYSLy85pkm9GaYVYMfw5BC1A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-        
+
+        <!-- https://startbootstrap.com/theme/sb-admin-2 -->
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" />
+        <link rel="stylesheet" href="css/sb-admin-2.min.css" />
+
         <!-- Stylesheet -->
-        <link rel="stylesheet" href="/perrinatas/css/style.css" />
+        <link rel="stylesheet" href="css/style.css" />
     </head>
 
     <body>
-        <nav class="navbar navbar-expand-lg">
+        <!-- Navbar -->
+        <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
             <a class="navbar-brand" href=""><i class="fa-solid fa-paw"></i> Perrinatas</a>
             
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navigation" aria-controls="navigation" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <div id="navigation" class="collapse navbar-collapse">
-                <ul class="navbar-nav mr-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/perrinatas/dashboard.php">
-                            <i class="fa-solid fa-house" title="Inicio"></i>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link disabled" href="/perrinatas/matches.php">
-                            <i class="fa-solid fa-comments" title="Conexiones"></i>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/perrinatas/profile.php">
-                            <i class="fa-solid fa-user" title="Perfil"></i>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="?logout=true">
-                            <i class="fa-solid fa-arrow-right-from-bracket" title="Cerrar Sesión"></i>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </nav>
-
-        <div id="main" class="container justify-content-center d-flex">
-            <?php
-                if ($_SESSION["type"] == "owner") {
-
-                } else {
-                    
-                }
-            ?>
-            <ul class="nav nav-pills flex-column border rounded-left">
+            <ul class="navbar-nav ml-auto">
+                <!-- Nav Dashboard -->
                 <li class="nav-item">
-                    <a class="nav-link text-center" href="?id=1" aria-current="page">cata</a>
+                    <a class="nav-link" href="/perrinatas/dashboard.php">
+                        <i class="fa-solid fa-house" title="Inicio"></i>
+                    </a>
+                </li>
+
+                <!-- Nav Matches -->
+                <li class="nav-item">
+                    <a class="nav-link disabled" href="/perrinatas/matches.php">
+                        <i class="fa-solid fa-comments" title="Conexiones"></i>
+                    </a>
+                </li>
+
+                <div class="topbar-divider d-none d-sm-block"></div>
+
+                <!-- Nav User -->
+                <li class="nav-item dropdown no-arrow">
+                    <a id="userDropdown" class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <span class="mr-2 d-none d-lg-inline text-gray-600 small"><?php echo $_SESSION["username"]; ?></span>
+                        <img class="img-profile rounded-circle" src="img/default-person.jpg" />
+                    </a>
+
+                    <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
+                        <a class="dropdown-item" href="/perrinatas/profile.php">
+                            <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i> Profile
+                        </a>
+
+                        <div class="dropdown-divider"></div>
+                        
+                        <a class="dropdown-item" href="?logout=true">
+                            <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i> Logout
+                        </a>
+                    </div>
                 </li>
             </ul>
-    
-            <form class="form col border rounded-right" action="" method="post">
-                <button id="submit" class="btn btn-primary" name="button" type="button" value="VER PERFIL" onclick="">VER PERFIL</button>
-                <button id="submit" class="btn btn-danger" name="button" type="button" value="BORRAR" onclick="">BORRAR</button>
-            </form>
+        </nav>
+
+        <!-- Content -->
+        <div id="main" class="container-fluid">
+            <!-- Page Heading -->
+            <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                <?php
+                    if ($_SESSION["type"] == "owner") {
+                        echo "<h1 class='h3 mb-0 text-gray-800'>Paseadores</h1>
+                        <button type='button' onclick='show_user_profile(true)'>Placeholder</button>
+                        <div class='dropdown mb-4'>
+                            <button id='dropdownMenuButton' class='btn btn-primary dropdown-toggle' type='button' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>Perro 01</button>
+                                
+                            <div class='dropdown-menu animated--fade-in' aria-labelledby='dropdownMenuButton'>
+                                <a class='dropdown-item' href='#'>Perro 01</a>
+                                <a class='dropdown-item' href='#'>Perro 02</a>
+                            </div>
+                        </div>";
+                    } else {
+                        echo "<h1 class='h3 mb-0 text-gray-800'>Perritos</h1>
+                        <button type='button' onclick='show_dog_profile(true)'>Placeholder</button>";
+                    }
+                ?>
+            </div>
+            
+            <?php require("components/chat.php"); ?>
         </div>
+
+        <!-- Modal -->
+        <?php require("components/modal.php"); ?>
+        
+        <!-- Modal Profiles -->
+        <?php require("components/modal_profiles.php"); ?>
+        
+        <!-- Utils -->
+        <script type="text/javascript" src="scripts/utils.js"></script>
         
         <!-- Coordinates -->
-        <script type="text/javascript" src="/perrinatas/scripts/coordinates.js"></script>
+        <script type="text/javascript" src="scripts/coordinates.js"></script>
         
         <!-- Bootstrap JavaScript -->
         <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>

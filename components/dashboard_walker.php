@@ -21,7 +21,7 @@
             $location = json_decode($row[7], true);
         } else {
             echo "<div class='alert alert-warning' role='alert'>
-                <p><i class='fa-solid fa-triangle-exclamation'></i> Lo sentimos, parece que no se pudieron encontrar perritos en este momento. ¡Intenta más tarde!</p>
+                <h5><i class='fa-solid fa-triangle-exclamation'></i> Lo sentimos, parece que no se pudieron encontrar perritos en este momento. ¡Intenta más tarde!</h5>
             </div>";
         }
     }
@@ -31,37 +31,176 @@
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="es">
     <body>
-        <div class="card-columns">
-            <a href="?id=<?php echo $dog_id; ?>">
-                <div class="card" style="width: 18rem;">
-                    <div class="card-header">
-                        <?php
-                            echo $name;
+        <div class="card-columns row justify-content-center">
+            <div class="card shadow mb-4" style="width: 18rem;">
+                <a href="#dog_id=<?php echo $dog_id; ?>" onclick="show_dog_profile();">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">
+                            <?php
+                                echo $name;
 
-                            if ($sex == "f") {
-                                echo "<i class='fa-solid fa-venus float-right'></i>";
-                            } else {
-                                echo "<i class='fa-solid fa-mars float-right'></i>";
-                            }
-                        ?>
+                                if ($sex == "f") {
+                                    echo "<i class='fa-solid fa-venus float-right'></i>";
+                                } else {
+                                    echo "<i class='fa-solid fa-mars float-right'></i>";
+                                }
+                            ?>
+                        </h6>
                     </div>
 
-                    <img class="card-img-top" src="imgs/<?php echo $photo; ?>" alt="<?php echo $name; ?>">
-
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item">
-                            <span class="float-left"><?php echo $breed; ?></span>
-                            <span class="float-right"><?php echo $size; ?></span>
-                        </li>
-                    </ul>
-
+                    <img class="card-img-top" src="img/<?php echo $photo; ?>" alt="<?php echo $name; ?>">
+                    
                     <div class="card-footer">
                         <small class="text-muted"><i class="fa-solid fa-location-dot"></i> <?php echo $location["name"]; ?></small>
                     </div>
-                </div>
-            </a>
+                </a>
+            </div>
+
+            <div class="card shadow mb-4" style="width: 18rem;">
+                <a href="#dog_id=<?php echo $dog_id; ?>" onclick="show_dog_profile();">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">
+                            <?php
+                                echo $name;
+
+                                if ($sex == "f") {
+                                    echo "<i class='fa-solid fa-venus float-right'></i>";
+                                } else {
+                                    echo "<i class='fa-solid fa-mars float-right'></i>";
+                                }
+                            ?>
+                        </h6>
+                    </div>
+
+                    <img class="card-img-top" src="img/<?php echo $photo; ?>" alt="<?php echo $name; ?>">
+                    
+                    <div class="card-footer">
+                        <small class="text-muted"><i class="fa-solid fa-location-dot"></i> <?php echo $location["name"]; ?></small>
+                    </div>
+                </a>
+            </div>
+
+            <div class="card shadow mb-4" style="width: 18rem;">
+                <a href="#dog_id=<?php echo $dog_id; ?>" onclick="show_dog_profile();">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">
+                            <?php
+                                echo $name;
+
+                                if ($sex == "f") {
+                                    echo "<i class='fa-solid fa-venus float-right'></i>";
+                                } else {
+                                    echo "<i class='fa-solid fa-mars float-right'></i>";
+                                }
+                            ?>
+                        </h6>
+                    </div>
+
+                    <img class="card-img-top" src="img/<?php echo $photo; ?>" alt="<?php echo $name; ?>">
+                    
+                    <div class="card-footer">
+                        <small class="text-muted"><i class="fa-solid fa-location-dot"></i> <?php echo $location["name"]; ?></small>
+                    </div>
+                </a>
+            </div>
+
+            <div class="card shadow mb-4" style="width: 18rem;">
+                <a href="#dog_id=<?php echo $dog_id; ?>" onclick="show_dog_profile();">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">
+                            <?php
+                                echo $name;
+
+                                if ($sex == "f") {
+                                    echo "<i class='fa-solid fa-venus float-right'></i>";
+                                } else {
+                                    echo "<i class='fa-solid fa-mars float-right'></i>";
+                                }
+                            ?>
+                        </h6>
+                    </div>
+
+                    <img class="card-img-top" src="img/<?php echo $photo; ?>" alt="<?php echo $name; ?>">
+                    
+                    <div class="card-footer">
+                        <small class="text-muted"><i class="fa-solid fa-location-dot"></i> <?php echo $location["name"]; ?></small>
+                    </div>
+                </a>
+            </div>
+
+            <div class="card shadow mb-4" style="width: 18rem;">
+                <a href="#dog_id=<?php echo $dog_id; ?>" onclick="show_dog_profile();">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">
+                            <?php
+                                echo $name;
+
+                                if ($sex == "f") {
+                                    echo "<i class='fa-solid fa-venus float-right'></i>";
+                                } else {
+                                    echo "<i class='fa-solid fa-mars float-right'></i>";
+                                }
+                            ?>
+                        </h6>
+                    </div>
+
+                    <img class="card-img-top" src="img/<?php echo $photo; ?>" alt="<?php echo $name; ?>">
+                    
+                    <div class="card-footer">
+                        <small class="text-muted"><i class="fa-solid fa-location-dot"></i> <?php echo $location["name"]; ?></small>
+                    </div>
+                </a>
+            </div>
+
+            <div class="card shadow mb-4" style="width: 18rem;">
+                <a href="#dog_id=<?php echo $dog_id; ?>" onclick="show_dog_profile();">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">
+                            <?php
+                                echo $name;
+
+                                if ($sex == "f") {
+                                    echo "<i class='fa-solid fa-venus float-right'></i>";
+                                } else {
+                                    echo "<i class='fa-solid fa-mars float-right'></i>";
+                                }
+                            ?>
+                        </h6>
+                    </div>
+
+                    <img class="card-img-top" src="img/<?php echo $photo; ?>" alt="<?php echo $name; ?>">
+                    
+                    <div class="card-footer">
+                        <small class="text-muted"><i class="fa-solid fa-location-dot"></i> <?php echo $location["name"]; ?></small>
+                    </div>
+                </a>
+            </div>
+
+            <div class="card shadow mb-4" style="width: 18rem;">
+                <a href="#dog_id=<?php echo $dog_id; ?>" onclick="show_dog_profile();">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">
+                            <?php
+                                echo $name;
+
+                                if ($sex == "f") {
+                                    echo "<i class='fa-solid fa-venus float-right'></i>";
+                                } else {
+                                    echo "<i class='fa-solid fa-mars float-right'></i>";
+                                }
+                            ?>
+                        </h6>
+                    </div>
+
+                    <img class="card-img-top" src="img/<?php echo $photo; ?>" alt="<?php echo $name; ?>">
+                    
+                    <div class="card-footer">
+                        <small class="text-muted"><i class="fa-solid fa-location-dot"></i> <?php echo $location["name"]; ?></small>
+                    </div>
+                </a>
+            </div>
         </div>
     </body>
 </html>
