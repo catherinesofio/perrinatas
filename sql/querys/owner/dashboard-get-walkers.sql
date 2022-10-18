@@ -6,4 +6,4 @@ FROM `walker`
     INNER JOIN `schedule`
         ON schedule.id = walker.id_schedule
     LEFT OUTER JOIN `match`
-        ON match.id_dog != 1;
+        ON match.id_dog = 1;

@@ -1,4 +1,4 @@
 # Get walker profile
 SELECT *
 FROM `walker`
-WHERE walker.id_user = 0;
+WHERE `id_user` = 0;

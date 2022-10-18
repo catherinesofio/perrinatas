@@ -1,4 +1,4 @@
 # Get user
-SELECT id
+SELECT `id`
 FROM `user`
-WHERE user.username = "";
+WHERE `username` = "";

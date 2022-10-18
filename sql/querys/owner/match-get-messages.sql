@@ -1,12 +1,12 @@
 # Get dog match messages
-SELECT id_walker
+SELECT `id_walker`
 FROM `match`
-WHERE id_walker = 0;
+WHERE `id_walker` = 0;
 
-SELECT name, photo
+SELECT `name`, `photo`
 FROM `walker`
-WHERE id = 0;
+WHERE `name` = 0;
 
-SELECT message.id_user, message.content, message.time, message.datetime message.read
+SELECT `id_user`, `content`, `time`, `read`
 FROM `message`
-WHERE id_match = 0;
+WHERE `id_match` = 0;

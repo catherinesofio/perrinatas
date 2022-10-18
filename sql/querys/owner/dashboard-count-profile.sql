@@ -1,4 +1,4 @@
 # Get dogs' profiles count
-SELECT COUNT(id_user)
+SELECT COUNT(`id_user`)
 FROM `dog`
-WHERE id_user = 0;
+WHERE `id_user` = 0;
