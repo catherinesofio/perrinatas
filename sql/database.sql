@@ -1,17 +1,78 @@
-CREATE DATABASE perrinatas;
+CREATE DATABASE `perrinatas`;
 
-USE perrinatas;
+USE `perrinatas`;
 
-CREATE TABLE `user` (id int NOT NULL AUTO_INCREMENT, type ENUM('owner', 'walker') NOT NULL, username varchar(25) NOT NULL, password varchar(25) NOT NULL, PRIMARY KEY (id));
+CREATE TABLE `user` (
+    `id` int NOT NULL AUTO_INCREMENT, 
+    `username` varchar(25) NOT NULL, 
+    `password` varchar(25) NOT NULL, 
+    `type` ENUM('owner', 'walker') NOT NULL, 
+    PRIMARY KEY (`id`)
+);
 
-CREATE TABLE dog (id int NOT NULL AUTO_INCREMENT, user_id INT NOT NULL, FOREIGN KEY (user_id) REFERENCES user(id), PRIMARY KEY (id));
+CREATE TABLE `schedule` (
+    `id` int NOT NULL AUTO_INCREMENT, 
+    `days` varchar(255) NOT NULL, 
+    `hours` varchar(255) NOT NULL, 
+    PRIMARY KEY (`id`)
+);
 
-CREATE TABLE profile_walker (user_id INT NOT NULL, name varchar(25) NOT NULL, photo varchar(255) NOT NULL, description varchar(255) NOT NULL, location varchar(255) NOT NULL, schedule varchar(255) NOT NULL, price INT NOT NULL, FOREIGN KEY (user_id) REFERENCES user(id));
+CREATE TABLE `location` (
+    `id` int NOT NULL AUTO_INCREMENT, 
+    `name` varchar(25) NOT NULL, 
+    `latitude` INT NOT NULL, 
+    `longitude` INT NOT NULL, 
+    PRIMARY KEY (`id`)
+);
 
-CREATE TABLE profile_dog (dog_id INT NOT NULL, name varchar(25) NOT NULL, photo varchar(255) NOT NULL, description varchar(255) NOT NULL, sex ENUM('f', 'm'), breed varchar(255) NOT NULL, size ENUM('S', 'M', 'XL'), location varchar(255) NOT NULL, FOREIGN KEY (dog_id) REFERENCES dog(id));
+CREATE TABLE `walker` (
+    `id` int NOT NULL AUTO_INCREMENT, 
+    `id_user` INT NOT NULL, 
+    `name` varchar(25), 
+    `photo` varchar(255), 
+    `description` varchar(255), 
+    `id_location` INT, 
+    `id_schedule` INT, 
+    `price` INT, 
+    FOREIGN KEY (`id_user`) REFERENCES `user`(`id`) ON UPDATE RESTRICT, 
+    FOREIGN KEY (`id_location`) REFERENCES `location`(`id`) ON UPDATE RESTRICT, 
+    FOREIGN KEY (`id_schedule`) REFERENCES `schedule`(`id`) ON UPDATE RESTRICT, 
+    PRIMARY KEY (`id`)
+);
 
-CREATE TABLE `match` (user_id INT NOT NULL, dog_id INT NOT NULL, timestamp datetime NOT NULL, chat BLOB NOT NULL, FOREIGN KEY (user_id) REFERENCES dog(user_id), FOREIGN KEY (dog_id) REFERENCES dog(id));
+CREATE TABLE `dog` (
+    `id` int NOT NULL AUTO_INCREMENT, 
+    `id_user` INT NOT NULL, 
+    `name` varchar(25), 
+    `photo` varchar(255), 
+    `description` varchar(255), 
+    `id_location` INT, 
+    `sex` ENUM('F', 'M'), 
+    `breed` varchar(255), 
+    `size` ENUM('S', 'M', 'XL'), 
+    FOREIGN KEY (`id_user`) REFERENCES `user`(`id`) ON UPDATE RESTRICT, 
+    FOREIGN KEY (`id_location`) REFERENCES `location`(`id`) ON UPDATE RESTRICT, 
+    PRIMARY KEY (`id`)
+);
 
-CREATE TABLE pending (user_id INT NOT NULL, dog_id INT NOT NULL, type ENUM('owner', 'walker') NOT NULL, FOREIGN KEY (user_id) REFERENCES dog(user_id), FOREIGN KEY (dog_id) REFERENCES dog(id));
+CREATE TABLE `match` (
+    `id` int NOT NULL AUTO_INCREMENT, 
+    `id_walker` INT NOT NULL, 
+    `id_dog` INT NOT NULL, 
+    `time` datetime NOT NULL, 
+    FOREIGN KEY (`id_walker`) REFERENCES `walker`(`id`) ON UPDATE RESTRICT, 
+    FOREIGN KEY ( `id_dog`) REFERENCES `dog`(`id`) ON UPDATE RESTRICT, 
+    PRIMARY KEY (`id`)
+);
 
-CREATE TABLE cooldown (user_id INT NOT NULL, dog_id INT NOT NULL, type ENUM('owner', 'walker') NOT NULL, timestamp datetime NOT NULL, FOREIGN KEY (user_id) REFERENCES dog(user_id), FOREIGN KEY (dog_id) REFERENCES dog(id));
+CREATE TABLE `message` (
+    `id` int NOT NULL AUTO_INCREMENT, 
+    `id_match` INT NOT NULL, 
+    `id_user` INT NOT NULL, 
+    `content` varchar(255), 
+    `time` datetime NOT NULL, 
+    `read` boolean NOT NULL, 
+    FOREIGN KEY ( `id_match`) REFERENCES `match`(`id`) ON UPDATE RESTRICT, 
+    FOREIGN KEY ( `id_user`) REFERENCES `user`(`id`) ON UPDATE RESTRICT, 
+    PRIMARY KEY (`id`)
+);
