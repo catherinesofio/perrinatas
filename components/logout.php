@@ -1,10 +1,28 @@
 <?php
     if (isset($_GET["logout"])) {
-        session_destroy();
+        unset($_SESSION["id"]);
+        unset($_SESSION["username"]);
+        unset($_SESSION["type"]);
+        unset($_SESSION["instant"]);
 
-        echo "<script type='text/javascript' src='/perrinatas/scripts/session_storage.js'></script>
-        <script type='text/javascript'>
-            logout();
-        </script>";
+        session_destroy();
+        
+        trigger_logout();
+    }
+
+    function trigger_logout() {
+        $logout_action = <<<LOGOUT
+            <script type='text/javascript'>
+                function logout() {
+                    sessionStorage.clear();
+                
+                    window.location.replace("/perrinatas/login.php");
+                }
+                
+                logout();
+            </script>
+        LOGOUT;
+
+        echo($logout_action);
     }
 ?>
