@@ -33,7 +33,7 @@
             $dogs[] = array(
                 "id" => -1,
                 "user_id" => $id,
-                "name" => "Nuevo Perro",
+                "name" => "+",
                 "photo" => "default-dog.jpg",
                 "description" => "",
                 "id_location" => -1,
@@ -45,7 +45,12 @@
                 "size" => ""
             );
 
-            $curr_dog = array_key_first($dogs);
+            
+            if (isset($_GET["id"])) {
+                $curr_dog = $_REQUEST["id"];    
+            } else {
+                $curr_dog = array_key_first($dogs);
+            }
         } else {
             $mysql_result = get_walker_profile($id);
 
@@ -198,34 +203,17 @@
                             }
                         }
 
-                        // Get Geolocation
-                        function get_user_coordinates() {
-                            navigator.geolocation.getCurrentPosition(position => {
-                                document.getElementById("latitude").value = position.coords.latitude;
-                                document.getElementById("longitude").value = position.coords.longitude;
-                            }, () => {
-                                alert("¡Tenes que permitir la locacion para continuar!");
-                            });
-                        }
+                        function update_iframe(e) {
+                            let name = e.target.value;
+                            
+                            let option = document.querySelector("option[value=" + name + "]");
+                            let latitude = option.getAttribute("latitude");
+                            let longitude = option.getAttribute("longitude");
+                            
+                            let url = "https://embed.waze.com/es/iframe?lat=" + latitude + "&lon=" + longitude + "&pin=1&zoom=17";
+                            let map = document.querySelector("#map");
 
-                        // Get Latitude and Longitude from Map
-                        function get_map_coordinates() {
-                            try {
-                                let container = document.getElementsByClassName("wm-attribution-control__latlng")[0];
-                                let text = container.getElementsByTagName("span")[0].innerHTML;
-
-                                let regex = /([-]?[0-9]*[.][0-9]*)/g;
-                                let match = text.match(regex);
-
-                                coords = {
-                                    latitude: match[0],
-                                    longitude: match[1]
-                                };
-
-                                console.log(coords);
-                            } catch (error) {
-                                console.log("ERROR AL GUARDAR LA UBICACION :(");
-                            }
+                            map.src = url;
                         }
                     </script>
 
@@ -244,7 +232,43 @@ PAGE;
     }
     
     function check_request() {
-        if (isset($_GET["id_dog"])) {
+        global $walker;
+
+        $id = $_SESSION["id"];
+        $type = $_SESSION["type"];
+        
+        if ($type == "owner") {
+
+        } else {
+            if (isset($_POST["name"]) && isset($_POST["photo"]) && isset($_POST["description"]) && isset($_POST["price"]) && isset($_POST["location"]) && isset($_POST["days"]) && isset($_POST["hours"])) {
+                require_once("data/locations.php");
+                
+                $id_walker = $walker["id"];
+                
+                $name = $_REQUEST["name"];
+                $description = $_REQUEST["description"];
+                $price = $_REQUEST["price"];
+
+                $photo = "$id-$id_walker";
+                move_uploaded_file($_FILES["fileToUpload"]["tmp_name"], "img/$photo");
+
+                $id_schedule = $walker["id_schedule"];
+                $days = $_REQUEST["days"];
+                $hours = $_REQUEST["hours"];
+                
+                $id_location = $walker["id_location"];
+                $location = $_REQUEST["location"];
+                $latitude = $locations[$location];
+                $longitude = $locations[$location];
+
+                if ($id_walker > -1) {
+                    add_walker($id, $name, $photo, $description, $price, $location, $latitude, $longitude, $days, $hours);
+                } else {
+                    update_walker_profile($id_walker, $name, $photo, $description, $price, $id_location, $location, $latitude, $longitude, $id_schedule, $days, $hours);
+                }
+            }
+        }
+        /*if (isset($_GET["id_dog"])) {
             echo "owner";
         }
 
@@ -254,7 +278,7 @@ PAGE;
             if ($type == "owner") {
             } else {
             }
-        }
+        }*/
     }
 
     // Owner
@@ -262,92 +286,60 @@ PAGE;
         global $curr_dog, $dogs;
         
         require_once("data/breeds.php");
+        require_once("data/locations.php");
 
         $dog = $dogs[$curr_dog];
-
-        $id_dog = $dog["id"];
-        $id_user = $dog["id_user"];
         $name = $dog["name"];
         $photo = $dog["photo"];
         $description = $dog["description"];
-        $location = $dog["location"];
+
+        $sex = "<option id='sex' value='' selected disabled>Selecciona un sexo...</option>";
+        $sex_data = $dog["sex"];
+        $sex_options = array("F", "M");
+        foreach ($sex_options as $s) {
+            $selected = ($sex_data == $s) ? "selected" : "";
+
+            $sex = $sex . "<option id='sex' value='$s' $selected>$s</option>";
+        }
+        
+        $breed = "<option id='breed' value='' selected disabled>Selecciona una raza...</option>";
+        $breed_data = $dog["breed"];
+        foreach ($breeds as $b) {
+            $selected = ($breed_data == $b) ? "selected" : "";
+
+            $breed = $breed . "<option id='breed' value='$b' $selected>$b</option>";
+        }
+
+        $size = "<option id='size' value='' selected disabled>Selecciona un tamaño...</option>";
+        $size_data = $dog["size"];
+        $size_options = array("S", "M", "XL");
+        foreach ($size_options as $s) {
+            $selected = ($size_data == $s) ? "selected" : "";
+
+            $size = $size . "<option id='size' value='$s' $selected>$s</option>";
+        }
+        
+        $location = "";
         $latitude = $dog["latitude"];
         $longitude = $dog["longitude"];
-        
+        $location_data = $dog["location"];
+        foreach ($locations as $loc) {
+            $value = $loc["name"];
+            $lat = $loc["latitude"];
+            $long = $loc["longitude"];
+
+            $selected = ($value == $location_data) ? "selected" : "";
+
+            $location = $location . "<option id='location' value='$value' latitude='$lat' longitude='$long' $selected>$value</option>";
+        }
+
+        $curr_name = $dogs[$curr_dog]["name"];
         $dropdown = "";
-        foreach ($dogs as $dog) {
-            $dropdown = $dropdown . "<a class='dropdown-item' href='?id=" . $dog["id"] ."'>" . $dog["name"] . "</a>";
-        }
+        foreach ($dogs as $dog_id => $dog) {
+            $id = $dog_id;
+            $name = $dog["name"];
 
-        $sex = $dog["sex"];
-        if ($sex == "f") {
-            $sex = <<<SEX
-                <option value="" disabled>Selecciona un sexo...</option>
-                <option value="f" selected>Hembra</option>"
-                <option value="m">Macho</option>"
-SEX;
-            $sex_female = "selected";
-        } else if ($sex == "m") {
-            $sex = <<<SEX
-                <option value="" disabled>Selecciona un sexo...</option>
-                <option value="f">Hembra</option>"
-                <option value="m" selected>Macho</option>"
-SEX;
-        } else {
-            $sex = <<<SEX
-                <option value="" selected disabled>Selecciona un sexo...</option>
-                <option value="f">Hembra</option>"
-                <option value="m">Macho</option>"
-SEX;
-        }
-
-        $breed = $dog["breed"];
-        if ($breed == "") {
-            $breeds_options = "<option value='' selected disabled>Selecciona una raza...</option>";
-        } else {
-            $breeds_options = "<option value='' disabled>Selecciona una raza...</option>";
-        }
-        foreach ($breeds as $b) {
-            $selected = ($breed == $b) ? "selected" : "";
-
-            $breeds_options = $breeds_options . "<option id='days' value='$b $selected>$b</option>";
-        }
-        
-        $size = $dog["size"];
-        if ($size == "S") {
-            $size = <<<SIZE
-                <option value="" disabled>Selecciona un tamaño...</option>
-                <option value="S" selected>Pequeño</option>
-                <option value="M">Mediano</option>
-                <option value="XL">Grande</option>
-SIZE;
-        } else if ($size == "M") {
-            $size = <<<SIZE
-                <option value="" disabled>Selecciona un tamaño...</option>
-                <option value="S">Pequeño</option>
-                <option value="M" selected>Mediano</option>
-                <option value="XL">Grande</option>
-SIZE;
-        } else if ($size == "XL") {
-            $size = <<<SIZE
-                <option value="" disabled>Selecciona un tamaño...</option>
-                <option value="S">Pequeño</option>
-                <option value="M">Mediano</option>
-                <option value="XL" selected>Grande</option>
-SIZE;
-        } else {
-            $size = <<<SIZE
-                <option value="" selected disabled>Selecciona un tamaño...</option>
-                <option value="S">Pequeño</option>
-                <option value="M">Mediano</option>
-                <option value="XL">Grande</option>
-SIZE;
-        }
-
-        if ($latitude && $longitude) {
-            $map = "<iframe src='https://embed.waze.com/es/iframe?lat={$latitude}&lon={$longitude}&pin=1&zoom=17' height='300' style='width: 100%;'></iframe>";
-        } else {
-            $map = "<iframe src='https://embed.waze.com/es/iframe?pin=1&zoom=17' height='400' style='width: 100%;'></iframe>";
+            $dropdown = $dropdown . "<a class='dropdown-item' href='?id=$id'>$name</a>";
         }
 
         $content = <<<CONTENT
@@ -356,8 +348,8 @@ SIZE;
                 <h1 class="h3 mb-0 text-gray-800">Perfil</h1>
 
                 <div class="dropdown mb-4">
-                    <button id="dropdownMenuButton" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{$name}</button>
-
+                    <button id="dropdownMenuButton" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{$curr_name}</button>
+                
                     <div class="dropdown-menu animated--fade-in" aria-labelledby="dropdownMenuButton">
                         {$dropdown}
                     </div>
@@ -365,161 +357,164 @@ SIZE;
             </div>
 
             <!-- Content -->
-                <div class="row justify-content-center">
-                    <div class="col-xl-12 col-lg-12 col-md-9">
-                        <div class="card border-0 shadow-lg">
-                            <div class="card shadow">
-                                <!-- Tab List -->
-                                <div class="card-header p-0">
-                                    <ul id="myTab" class="card-header nav nav-tabs m-0 p-0 container-fluid" role="tablist">
-                                        <!-- About Tab Button -->
-                                        <li class="nav-item" role="presentation">
-                                            <button id="about-tab" class="nav-link active" data-toggle="tab" data-target="#about" type="button" role="tab" aria-controls="about" aria-selected="true">
-                                                <i class="fa-solid fa-circle-info"></i>
-                                            </button>
-                                        </li>
+            <div class="row justify-content-center">
+                <div class="col-xl-12 col-lg-12 col-md-9">
+                    <div class="card border-0 shadow-lg">
+                        <div class="card shadow">
+                            <!-- Tab List -->
+                            <div class="card-header p-0">
+                                <ul id="myTab" class="card-header nav nav-tabs m-0 p-0 container-fluid" role="tablist">
+                                    <!-- About Tab Button -->
+                                    <li class="nav-item" role="presentation">
+                                        <button id="about-tab" class="nav-link active" data-toggle="tab" data-target="#about" type="button" role="tab" aria-controls="about" aria-selected="true">
+                                            <i class="fa-solid fa-circle-info"></i>
+                                        </button>
+                                    </li>
                 
-                                        <!-- Characteristics Tab Button -->
-                                        <li class="nav-item" role="presentation">
-                                            <button id="characteristics-tab" class="nav-link" data-toggle="tab" data-target="#characteristics" type="button" role="tab" aria-controls="characteristics" aria-selected="false">
-                                                <i class="fa-solid fa-dog"></i>
-                                            </button>
-                                        </li>
-                
-                                        <!-- Location Tab Button -->
-                                        <li class="nav-item" role="presentation">
-                                            <button id="location-tab" class="nav-link" data-toggle="tab" data-target="#location" type="button" role="tab" aria-controls="location" aria-selected="false">
-                                                <i class="fa-solid fa-location-dot"></i>
-                                            </button>
-                                        </li>
-                
-                                        <!-- Delete Dog Button -->
-                                        <li class="nav-item">
-                                            <button id="btn-delete-dog" class="btn btn-danger" type="button" onclick="delete_dog();">
-                                                <i class="fa-solid fa-trash"></i>
-                                            </button>
-                                        </li>
-                                    </ul>
-                                </div>
+                                    <!-- Characteristics Tab Button -->
+                                    <li class="nav-item" role="presentation">
+                                        <button id="characteristics-tab" class="nav-link" data-toggle="tab" data-target="#characteristics" type="button" role="tab" aria-controls="characteristics" aria-selected="false">
+                                            <i class="fa-solid fa-dog"></i>
+                                        </button>
+                                    </li>
+            
+                                    <!-- Location Tab Button -->
+                                    <li class="nav-item" role="presentation">
+                                        <button id="location-tab" class="nav-link" data-toggle="tab" data-target="#location" type="button" role="tab" aria-controls="location" aria-selected="false">
+                                            <i class="fa-solid fa-location-dot"></i>
+                                        </button>
+                                    </li>
+            
+                                    <!-- Delete Dog Button -->
+                                    <li class="nav-item">
+                                        <button id="btn-delete-dog" class="btn btn-danger" type="button" onclick="delete_dog();">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </li>
+                                </ul>
+                            </div>
 
-                                <!-- Tab Content -->
-                                <form class="card-body">
-                                    <div id="myTabContent" class="tab-content">
-                                        <!-- About Tab -->
-                                        <div id="about" class="tab-pane fade show active" role="tabpanel" aria-labelledby="about-tab">
-                                            <div class="row mb-1">
-                                                <!-- Picture -->
-                                                <div class="col-2">
-                                                    <img id="photo-preview" class="w-100" src="img/{$photo}" alt="Foto de Perfil" />
-                                                </div>
-
-                                                <div class="col">
-                                                    <!-- Profile Picture -->
-                                                    <fieldset class="mb-1">
-                                                        <div class="custom-file">
-                                                            <input id="photo" name="photo" class="custom-file-input" type="file" accept="image/*" onchange="update_profile_pic(event);" />
-                                                            
-                                                            <label id="photo-name" class="custom-file-label" for="customFileLang">Selecciona una foto...</label>
-                                                        </div>
-                                                    </fieldset>
-                
-                                                    <!-- Name -->
-                                                    <fieldset class="input-group mb-1">
-                                                        <div class="input-group-prepend">
-                                                            <label class="input-group-text" for="name">Nombre</label>
-                                                        </div>
-
-                                                        <input id="name" class="form-control" name="name" type="text" placeholder="Escribe tu nombre..." value="{$name}" required />
-                                                    </fieldset>
-                
-                                                    <!-- Description -->
-                                                    <fieldset class="input-group mb-1">
-                                                        <div class="input-group-prepend">
-                                                            <label class="input-group-text form-label" for="description">Descripción</label>
-                                                        </div>
-
-                                                        <textarea id="description" class="form-control" name="description" placeholder="Escribe una descripción..." value="{$description}" required></textarea>
-                                                    </fieldset>
-                                                </div>
+                            <!-- Tab Content -->
+                            <form class="card-body" class="user form needs-validation" name="profile" method="POST" enctype="multipart/form-data">
+                                <div id="myTabContent" class="tab-content">
+                                    <!-- About Tab -->
+                                    <div id="about" class="tab-pane fade show active" role="tabpanel" aria-labelledby="about-tab">
+                                        <div class="row mb-1">
+                                            <!-- Picture -->
+                                            <div class="col-2">
+                                                <img id="photo-preview" class="w-100" src="img/{$photo}" alt="Foto de Perfil" />
                                             </div>
+
+                                            <div class="col">
+                                                <!-- Profile Picture -->
+                                                <fieldset class="mb-1">
+                                                    <div class="custom-file">
+                                                        <input id="photo" name="photo" class="custom-file-input" type="file" accept="image/*" onchange="update_profile_pic(event);" />
+                                                        
+                                                        <label id="photo-name" class="custom-file-label" for="customFileLang">Selecciona una foto...</label>
+                                                    </div>
+                                                </fieldset>
+            
+                                                <!-- Name -->
+                                                <fieldset class="input-group mb-1">
+                                                    <div class="input-group-prepend">
+                                                        <label class="input-group-text" for="name">Nombre</label>
+                                                    </div>
+
+                                                    <input id="name" class="form-control" name="name" type="text" placeholder="Escribe tu nombre..." value="{$name}" required />
+                                                </fieldset>
+            
+                                                <!-- Description -->
+                                                <fieldset class="input-group mb-1">
+                                                    <div class="input-group-prepend">
+                                                        <label class="input-group-text form-label" for="description">Descripción</label>
+                                                    </div>
+
+                                                    <textarea id="description" class="form-control" name="description" placeholder="Escribe una descripción..." value="{$description}" required></textarea>
+                                                </fieldset>
+                                            </div>
+                                        </div>
+                                
+                                        <fieldset class="float-right">
+                                            <button class="btn btn-primary" type="button" onclick="change_tab('characteristics');">Siguiente</button>
+                                        </fieldset>
+                                    </div>
                                     
-                                            <fieldset class="float-right">
-                                                <button class="btn btn-primary" type="button" onclick="change_tab('characteristics');">Siguiente</button>
-                                            </fieldset>
-                                        </div>
-                                        
-                                        <!-- Characteristics Tab -->
-                                        <div id="characteristics" class="tab-pane fade" role="tabpanel" aria-labelledby="characteristics-tab">
-                                            <!-- Sex -->
-                                            <fieldset class="input-group mb-1">
-                                                <div class="input-group-prepend">
-                                                    <label class="input-group-text form-label" for="sex">
-                                                        <i class="fa-solid fa-venus-mars"></i>
-                                                    </label>
-                                                </div>
-                
-                                                <select id="sex" class="selectpicker form-control border" data-live-search="false" data-live-search-style="startsWith">
-                                                    {$sex}
-                                                </select>
-                                            </fieldset>
-                
-                                            <!-- Breed -->
-                                            <fieldset class="input-group mb-1">
-                                                <div class="input-group-prepend">
-                                                    <label class="input-group-text form-label" for="breed">
-                                                        <i class="fa-solid fa-dog"></i>
-                                                    </label>
-                                                </div>
+                                    <!-- Characteristics Tab -->
+                                    <div id="characteristics" class="tab-pane fade" role="tabpanel" aria-labelledby="characteristics-tab">
+                                        <!-- Sex -->
+                                        <fieldset class="input-group mb-1">
+                                            <div class="input-group-prepend">
+                                                <label class="input-group-text form-label" for="sex">
+                                                    <i class="fa-solid fa-venus-mars"></i>
+                                                </label>
+                                            </div>
+            
+                                            <select id="sex" class="selectpicker form-control border" data-live-search="false" data-live-search-style="startsWith" required>
+                                                {$sex}
+                                            </select>
+                                        </fieldset>
+            
+                                        <!-- Breed -->
+                                        <fieldset class="input-group mb-1">
+                                            <div class="input-group-prepend">
+                                                <label class="input-group-text form-label" for="breed">
+                                                    <i class="fa-solid fa-dog"></i>
+                                                </label>
+                                            </div>
 
-                                                <select id="breed" class="selectpicker form-control border" data-live-search="true" data-live-search-style="startsWith">
-                                                    {$breeds_options} 
-                                                </select>
-                                            </fieldset>
-                
-                                            <!-- Size -->
-                                            <fieldset class="input-group mb-1">
-                                                <div class="input-group-prepend">
-                                                    <label class="input-group-text form-label" for="size">Tamaño</label>
-                                                </div>
-                
-                                                <select id="size" class="selectpicker form-control border" data-live-search="false" data-live-search-style="startsWith">
-                                                    {$size}
-                                                </select>
-                                            </fieldset>
-                                            
-                                            <fieldset class="float-right">
-                                                <button class="btn btn-secondary" type="button" onclick="change_tab('about');">Anterior</button>
-                                                <button class="btn btn-primary" type="button" onclick="change_tab('location');">Siguiente</button>
-                                            </fieldset>
-                                        </div>
-                
-                                        <!-- Location Tab -->
-                                        <div id="location" class="tab-pane fade" role="tabpanel" aria-labelledby="location-tab">
-                                            <!-- Map -->
-                                            <fieldset class="input-group mb-1">
-                                                <div class="input-group-prepend">
-                                                    <label class="input-group-text" for="location">Ubicación</label>
-                                                </div>
-                                                <input id="location" class="form-control" name="location" type="text" placeholder="{$location}" disabled />
-                                            </fieldset>
-
-                                            {$map}
+                                            <select id="breed" class="selectpicker form-control border" data-live-search="true" data-live-search-style="startsWith" required>
+                                                {$breed} 
+                                            </select>
+                                        </fieldset>
+            
+                                        <!-- Size -->
+                                        <fieldset class="input-group mb-1">
+                                            <div class="input-group-prepend">
+                                                <label class="input-group-text form-label" for="size">Tamaño</label>
+                                            </div>
+            
+                                            <select id="size" class="selectpicker form-control border" data-live-search="false" data-live-search-style="startsWith" required>
+                                                {$size}
+                                            </select>
+                                        </fieldset>
                                         
-                                            <fieldset class="float-right">
-                                                <button class="btn btn-secondary" type="button" onclick="change_tab('characteristics');">Anterior</button>
-                                                <button id="submit" class="btn btn-primary" name="submit" type="button" value="Guardar" onclick="get_map_coordinates();">Guardar</button>
-                                            </fieldset>
-                                        </div>
+                                        <fieldset class="float-right">
+                                            <button class="btn btn-secondary" type="button" onclick="change_tab('about');">Anterior</button>
+                                            <button class="btn btn-primary" type="button" onclick="change_tab('location');">Siguiente</button>
+                                        </fieldset>
+                                    </div>
+            
+                                    <!-- Location Tab -->
+                                    <div id="location" class="tab-pane fade" role="tabpanel" aria-labelledby="location-tab">
+                                        <!-- Map -->
+                                        <fieldset class="input-group mb-1">
+                                            <div class="input-group-prepend">
+                                                <label class="input-group-text" for="location">Ubicación</label>
+                                            </div>
+
+                                            <select id="location" class="selectpicker form-control border" data-live-search="true" data-live-search-style="startsWith" onchange="update_iframe(event);" required>
+                                                {$location}
+                                            </select>
+                                        </fieldset>
+
+                                        <iframe id="map" src="https://embed.waze.com/es/iframe?lat={$latitude}&lon={$longitude}&pin=1&zoom=17" height="300" style="width: 100%;" sandbox="allow-same-origin allow-scripts"></iframe>
+                                        
+                                        <fieldset class="float-right">
+                                            <button class="btn btn-secondary" type="button" onclick="change_tab('characteristics');">Anterior</button>
+                                            <button id="submit" class="btn btn-primary" name="submit" type="button" value="Guardar">Guardar</button>
+                                        </fieldset>
                                     </div>
                                 </div>
-                            </form>
-                        </div>
+                            </div>
+                        </form>
                     </div>
 
                     <!-- Delete Account Button -->
                     <button id="btn-delete-account" class="btn btn-danger mt-2" type="button" onclick="delete_account();">ELIMINAR CUENTA</button>
                 </div>
             </div>
+        </div>
 CONTENT;
 
         return $content;
@@ -528,18 +523,17 @@ CONTENT;
     // Walker
     function get_content_walker() {
         global $walker;
+        
+        require_once("data/locations.php");
 
-        $id_user = $walker["id"];
-        $name = $walker["name"];
         $photo = $walker["photo"];
+        $name = $walker["name"];
         $description = $walker["description"];
         $price = $walker["price"];
-        $location = $walker["location"];
-        $latitude = $walker["latitude"];
-        $longitude = $walker["longitude"];
         
-        $days = $walker["days"];
-        $days_info = array(
+        $days = "";
+        $days_data = $walker["days"];
+        $days_options = array(
             array("value" => "monday", "display" => "Lunes"),
             array("value" => "tuesday", "display" => "Martes"),
             array("value" => "wednesday", "display" => "Miércoles"),
@@ -548,18 +542,17 @@ CONTENT;
             array("value" => "saturday", "display" => "Sabado"),
             array("value" => "sunday", "display" => "Domingo")
         );
-        $days_display = "";
-        foreach ($days_info as $day) {
+        foreach ($days_options as $day) {
             $value = $day["value"];
             $display = $day["display"];
 
-            $selected = in_array($value, $days) ? "selected" : "";
+            $selected = in_array($value, $days_options) ? "selected" : "";
 
-            $days_display = $days_display . "<option id='days' value='$value' $selected>$display</option>";
+            $days = $days . "<option id='days' value='$value' $selected>$display</option>";
         }
-
-        $hours = $walker["hours"];
-        $hours_display = "";
+        
+        $hours = "";
+        $hours_data = $walker["hours"];
         for ($h = 1; $h <= 24; $h++) {
             if ($h < 10) {
                 $display = "0$h:00";
@@ -567,15 +560,23 @@ CONTENT;
                 $display = "$h:00";
             }
 
-            $selected = in_array($display, $hours) ? "selected" : "";
+            $selected = in_array($display, $hours_data) ? "selected" : "";
 
-            $hours_display = $hours_display . "<option id='hours' value='$h' $selected>$display</option>";
+            $hours = $hours . "<option id='hours' value='$h' $selected>$display</option>";
         }
 
-        if ($latitude && $longitude) {
-            $map = "<iframe src='https://embed.waze.com/es/iframe?lat=$latitude&lon=$longitude&pin=1&zoom=17' height='300' style='width: 100%;'></iframe>";
-        } else {
-            $map = "<iframe src='https://embed.waze.com/es/iframe?pin=1&zoom=17' height='400' style='width: 100%;'></iframe>";
+        $location = "";
+        $latitude = $walker["latitude"];
+        $longitude = $walker["longitude"];
+        $location_data = $walker["location"];
+        foreach ($locations as $loc) {
+            $value = $loc["name"];
+            $lat = $loc["latitude"];
+            $long = $loc["longitude"];
+
+            $selected = ($value == $location_data) ? "selected" : "";
+
+            $location = $location . "<option id='location' value='$value' latitude='$lat' longitude='$long' $selected>$value</option>";
         }
 
         $content = <<<CONTENT
@@ -616,7 +617,7 @@ CONTENT;
                             </div>
 
                             <!-- Tab Content -->
-                            <form class="card-body" method="POST" enctype="multipart/form-data">
+                            <form class="card-body" class="user form needs-validation" name="profile" method="POST" enctype="multipart/form-data">
                                 <div id="myTabContent" class="tab-content">
                                     <!-- About Tab -->
                                     <div id="about" class="tab-pane fade show active" role="tabpanel" aria-labelledby="about-tab">
@@ -631,7 +632,7 @@ CONTENT;
                                                 <fieldset class="mb-1">
                                                     <div class="custom-file">
                                                         <input id="photo" name="photo" class="custom-file-input" type="file" accept="image/*" onchange="update_profile_pic(event);" />
-                                                        
+                                                                
                                                         <label id="photo-name" class="custom-file-label" for="customFileLang">Selecciona una foto...</label>
                                                     </div>
                                                 </fieldset>
@@ -683,7 +684,7 @@ CONTENT;
                                             </div>
 
                                             <select id="days" class="selectpicker form-control border" data-live-search="true" data-live-search-style="startsWith" multiple required>
-                                                {$days_display}
+                                                {$days}
                                             </select>
                                         </fieldset>
 
@@ -696,7 +697,7 @@ CONTENT;
                                             </div>
 
                                             <select id="hours" class="selectpicker form-control border" data-live-search="true" data-live-search-style="startsWith" multiple required>
-                                                {$hours_display}
+                                                {$hours}
                                             </select>
                                         </fieldset>
                                         
@@ -708,20 +709,22 @@ CONTENT;
                                     
                                     <!-- Location Tab -->
                                     <div id="location" class="tab-pane fade" role="tabpanel" aria-labelledby="location-tab">
-                                        
                                         <!-- Map -->
                                         <fieldset class="input-group mb-1">
                                             <div class="input-group-prepend">
                                                 <label class="input-group-text" for="location">Ubicación</label>
                                             </div>
-                                            <input id="location" class="form-control" name="location" type="text" value="{$location}" disabled required />
+
+                                            <select id="location" class="selectpicker form-control border" data-live-search="true" data-live-search-style="startsWith" onchange="update_iframe(event);" required>
+                                                {$location}
+                                            </select>
                                         </fieldset>
 
-                                        {$map}
+                                        <iframe id="map" src="https://embed.waze.com/es/iframe?lat={$latitude}&lon={$longitude}&pin=1&zoom=17" height="300" style="width: 100%;" sandbox="allow-same-origin allow-scripts"></iframe>
                                         
                                         <fieldset class="float-right">
                                             <button class="btn btn-secondary" type="button" onclick="change_tab('availability');">Anterior</button>
-                                            <button id="submit" class="btn btn-primary" name="submit" type="button" value="Guardar" onclick="get_map_coordinates();">Guardar</button>
+                                            <button id="submit" class="btn btn-primary" name="submit" type="button" value="Guardar">Guardar</button>
                                         </fieldset>
                                     </div>
                                 </div>
@@ -737,16 +740,4 @@ CONTENT;
 
         return $content;
     }
-/*
-        <!-- Page Scripts -->
-        <script type="text/javascript">
-            function delete_dog() {
-                show_modal("danger", "<i class='fa-solid fa-triangle-exclamation'></i> Borrar Perro", "<h5>¿Estas seguro que quieres borrar a <?php echo $name; ?>?</h5>", "<a class='btn btn-danger mt-2' href='?delete_dog=true&id_dog=<?php echo $id; ?>'>ELIMINAR</a><button class='btn btn-secondary mt-2' type='button' data-dismiss='modal' aria-label='Close'>CANCELAR</button>");
-            }
-
-            function delete_account() {
-                show_modal("danger", "<i class='fa-solid fa-triangle-exclamation'></i> Borrar Cuenta", "<h5>¿Estas seguro que quieres borrar tu cuenta?</h5>", "<a class='btn btn-danger mt-2' href='?delete_account=true'>ELIMINAR</a><button class='btn btn-secondary mt-2' type='button' data-dismiss='modal' aria-label='Close'>CANCELAR</button>");
-            }
-        </script>
-*/
 ?>

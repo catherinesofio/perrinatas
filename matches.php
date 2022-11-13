@@ -108,21 +108,34 @@
     }
 
     function draw_page() {
-        global $curr_dog, $dogs, $contacts, $chats;
+        global $has_profile, $curr_dog, $dogs, $contacts, $chats;
 
         $type = $_SESSION["type"];
         $username = $_SESSION["username"];
 
-        if ($type == "owner") {
-            $content = get_content_owners();
-            $photo = $dogs[$curr_dog]["photo"];
+        if ($has_profile) {
+            if ($type == "owner") {
+                $content = get_content_owners();
+                $photo = $dogs[$curr_dog]["photo"];
+            } else {
+                $content = get_content_walkers();
+                $photo = "default-person.jpg"; // CAMBIAR
+            }
+
+            $chat = get_chat($contacts, $chats);
         } else {
-            $content = get_content_walkers();
-            $photo = "default-person.jpg"; // CAMBIAR
+            $content = "";
+
+            if ($type == "owner") {
+                $chat = get_alert("info", "<i class='fa-solid fa-triangle-exclamation'></i> ¡Alto ahí! Para conectar con paseadores, primero tenes que <a href='/perrinatas/profile.php'>completar tu perfil</a>.");
+                $photo = $dogs[$curr_dog]["photo"];
+            } else {
+                $chat = get_alert("info", "<i class='fa-solid fa-triangle-exclamation'></i> ¡Alto ahí! Para conectar con perritos, primero tenes que <a href='/perrinatas/profile.php'>completar tu perfil</a>.");
+                $photo = "default-person.jpg"; // CAMBIAR
+            }
         }
 
         $modal = get_modal();
-        $chat = get_chat($contacts, $chats);
 
         $page = <<<PAGE
             <!DOCTYPE html>
@@ -306,45 +319,35 @@ PAGE;
 
     // Owner
     function get_content_owners() {
-        global $has_profile, $curr_dog, $dogs;
+        global $curr_dog, $dogs;
 
-        if ($has_profile) {
-            $curr_name = $dogs[$curr_dog]["name"];
+        $curr_name = $dogs[$curr_dog]["name"];
             
-            $dropdown = "";
-            foreach ($dogs as $dog_id => $dog) {
-                $id = $dog_id;
-                $name = $dog["name"];
+        $dropdown = "";
+        foreach ($dogs as $dog_id => $dog) {
+            $id = $dog_id;
+            $name = $dog["name"];
 
-                $dropdown = $dropdown . "<a class='dropdown-item' href='?id=$id'>$name</a>";
-            }
-
-            $content = <<<CONTENT
-                <div class="dropdown mb-4">
-                    <button id="dropdownMenuButton" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{$curr_name}</button>
-                
-                    <div class="dropdown-menu animated--fade-in" aria-labelledby="dropdownMenuButton">
-                        {$dropdown}
-                    </div>
-                </div>
-CONTENT;
-        } else {
-            $content = get_alert("info", "<i class='fa-solid fa-triangle-exclamation'></i> ¡Alto ahí! Para conectar con paseadores, primero tenes que <a href='/perrinatas/profile.php'>completar tu perfil</a>.");
+            $dropdown = $dropdown . "<a class='dropdown-item' href='?id=$id'>$name</a>";
         }
+
+        $content = <<<CONTENT
+            <div class="dropdown mb-4">
+                <button id="dropdownMenuButton" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{$curr_name}</button>
+            
+                <div class="dropdown-menu animated--fade-in" aria-labelledby="dropdownMenuButton">
+                    {$dropdown}
+                </div>
+            </div>
+CONTENT;
 
         return $content;
     }
 
     // Walker
     function get_content_walkers() {
-        global $has_profile;
-
-        if ($has_profile) {
-            $content = <<<CONTENT
+        $content = <<<CONTENT
 CONTENT;
-        } else {
-            $content = get_alert("info", "<i class='fa-solid fa-triangle-exclamation'></i> ¡Alto ahí! Para conectar con perritos, primero tenes que <a href='/perrinatas/profile.php'>completar tu perfil</a>.");
-        }
 
         return $content;
     }
