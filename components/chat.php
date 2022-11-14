@@ -1,5 +1,5 @@
 <?php
-    function get_chat($contacts, $chats) {
+    function get_chat($contacts, $chats, $photo_user) {
         global $id_user;
 
         if (count($contacts) > 0) {
@@ -12,7 +12,7 @@
             }
             
             foreach ($chats as $chat) {
-                $messages = $messages . get_message($chat);
+                $messages = $messages . get_message($chat, $photo_user);
             }
 
             $chat = <<<CHAT
@@ -192,12 +192,14 @@ MESSAGE;
         return $message;
     }
 
-    function get_message($data) {
+    function get_message($data, $photo_user) {
         $id = $data["id"];
         $id_match = $data["id_match"];
         $name = $data["name"];
-        $photo = $data["photo"];
         $is_curr_user = $data["is_curr_user"];
+
+        $photo = ($is_curr_user) ? $photo_user : $data["photo"];
+
         $content = $data["content"];
         $datetime = $data["datetime"];
         $datetime = date("h:i A | j M", strtotime($datetime));

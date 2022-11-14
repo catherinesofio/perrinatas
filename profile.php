@@ -100,7 +100,7 @@
 
         if ($type == "owner") {
             $content = get_content_owner();
-            $photo = ($has_profile) ? $dogs[$curr_dog]["photo"] : "default-dog.jpg";
+            $photo = ($has_profile && $curr_dog > -1) ? $dogs[$curr_dog]["photo"] : "default-dog.jpg";
         } else {
             $content = get_content_walker();
             $photo = ($has_profile) ? $walker["photo"] : "default-person.jpg";

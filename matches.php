@@ -122,7 +122,7 @@
                 $photo = $walker["photo"];
             }
 
-            $chat = get_chat($contacts, $chats);
+            $chat = get_chat($contacts, $chats, $photo);
         } else {
             $content = "";
 
@@ -287,10 +287,16 @@ PAGE;
 
             try {
                 add_message($id_match, $id, $message);
+
+                echo "<meta http-equiv='refresh' content='0'>";
             } catch (Exception $error) {
                 show_modal("danger", "<i class='fa-solid fa-triangle-exclamation'></i> Error", "<h5>Lo sentimos, no se puedo enviar el mensaje. Por favor, intentalo nuevamente más tarde.</h5>", "", "");
             }
-        } else if (isset($_GET["id_match"]) && isset($_GET["disconnect"])) {
+
+            return false;
+        }
+        
+        if (isset($_GET["id_match"]) && isset($_GET["disconnect"])) {
             $id_match = $_REQUEST["id_match"];
 
             try {
@@ -305,6 +311,8 @@ PAGE;
             $name_user = $contacts[$id_user]["name"];
 
             show_modal("danger", "<i class='fa-solid fa-triangle-exclamation'></i> Desconectar", "<h5>¿Estas seguro que queres desconectarte de <span class='text-danger'>{$name_user}</span>?</h5>", "<button class='btn btn-danger' type='button' onclick='disconnect_user({$id});'>Aceptar</button><button class='btn btn-secondary' type='button' onclick='hide_modal();'>Cancelar</button>", "['id_user', 'connect', 'confirm-disconnect', 'disconnect', 'id_match']");
+        } else if (isset($_GET["id_match"])) {
+            echo "HOLA ACA TENGO QUE MODIFICAR";
         } else if (isset($_GET["id_user"])) {
             $id_user = $_REQUEST["id_user"];
             $contact = $contacts[$id_user];
