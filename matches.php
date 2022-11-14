@@ -19,7 +19,7 @@
     }
 
     function get_data() {
-        global $has_profile, $curr_dog, $dogs, $curr_walker, $contacts, $chats;
+        global $has_profile, $curr_dog, $dogs, $curr_walker, $walker, $contacts, $chats;
 
         $id = $_SESSION["id"];
         $type = $_SESSION["type"];
@@ -108,7 +108,7 @@
     }
 
     function draw_page() {
-        global $has_profile, $curr_dog, $dogs, $contacts, $chats;
+        global $has_profile, $curr_dog, $dogs, $contacts, $chats, $walker;
 
         $type = $_SESSION["type"];
         $username = $_SESSION["username"];
@@ -119,7 +119,7 @@
                 $photo = $dogs[$curr_dog]["photo"];
             } else {
                 $content = get_content_walkers();
-                $photo = "default-person.jpg"; // CAMBIAR
+                $photo = $walker["photo"];
             }
 
             $chat = get_chat($contacts, $chats);
@@ -128,10 +128,10 @@
 
             if ($type == "owner") {
                 $chat = get_alert("info", "<i class='fa-solid fa-triangle-exclamation'></i> ¡Alto ahí! Para conectar con paseadores, primero tenes que <a href='/perrinatas/profile.php'>completar tu perfil</a>.");
-                $photo = $dogs[$curr_dog]["photo"];
+                $photo = "default-dog.jpg";
             } else {
                 $chat = get_alert("info", "<i class='fa-solid fa-triangle-exclamation'></i> ¡Alto ahí! Para conectar con perritos, primero tenes que <a href='/perrinatas/profile.php'>completar tu perfil</a>.");
-                $photo = "default-person.jpg"; // CAMBIAR
+                $photo = "default-person.jpg";
             }
         }
 

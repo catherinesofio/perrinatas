@@ -156,7 +156,7 @@
                 VALUES ('$location', $latitude, $longitude);";
         $mysql_result = $conn->query($sql);
 
-        $id_location = mysql_insert_id();
+        $id_location = $conn->insert_id;
         
         $sql = "INSERT INTO `dog` (`id_user`, `name`, `photo`, `description`, `id_location`, `sex`, `breed`, `size`)
                 VALUES ($id_user, '$name', '$photo', '$description', $id_location, '$sex', '$breed', '$size');";
@@ -168,21 +168,16 @@
     function delete_dog($id_dog) {
         $conn = start_db_connection();
         
-        $sql = "SELECT `id`, `id_location`
+        $sql = "SELECT `id`
                 FROM `match`
                 WHERE id_dog = $id_dog;";
-        $mysql_result = $conn->query($sql);
-        
-        while ($row = $mysql_result->fetch_row()) {
+        $matches = $conn->query($sql);
+
+        while ($row = $matches->fetch_row()) {
             $id_match = $row[0];
-            $id_location = $row[1];
 
             $sql = "DELETE FROM `message`
                     WHERE `id_match` = $id_match;";
-            $mysql_result = $conn->query($sql);
-
-            $sql = "DELETE FROM `location`
-                    WHERE `id` = $id_location;";
             $mysql_result = $conn->query($sql);
         }
 
@@ -193,9 +188,21 @@
         $sql = "DELETE FROM `request`
                 WHERE `id_dog` = $id_dog;";
         $mysql_result = $conn->query($sql);
+        
+        $sql = "SELECT `id_location`
+                FROM `dog`
+                WHERE id = $id_dog;";
+        $mysql_result = $conn->query($sql);
+
+        $row = $mysql_result->fetch_row();
+        $id_location = $row[0];
 
         $sql = "DELETE FROM `dog`
                 WHERE `id` = $id_dog;";
+        $mysql_result = $conn->query($sql);
+
+        $sql = "DELETE FROM `location`
+                WHERE `id` = $id_location;";
         $mysql_result = $conn->query($sql);
 
         stop_db_connection($conn);
@@ -222,7 +229,7 @@
 
         $mysql_result = get_dogs($id_user);
 
-        while ($row = mysql_result->fetch_row()) {
+        while ($row = $mysql_result->fetch_row()) {
             $id_dog = $row[0];
 
             delete_dog($id_dog);
@@ -332,15 +339,15 @@
                 VALUES ('$location', $latitude, $longitude);";
         $mysql_result = $conn->query($sql);
 
-        $id_location = mysql_insert_id();
+        $id_location = $conn->insert_id;
 
         $sql = "INSERT INTO `schedule` (`days`, `hours`)
                 VALUES ('$days', '$hours');";
         $mysql_result = $conn->query($sql);
 
-        $id_schedule = mysql_insert_id();
+        $id_schedule = $conn->insert_id;
         
-        $sql = "INSERT INTO `dog` (`id_user`, `name`, `photo`, `description`, `id_location`, `id_schedule`, `price`)
+        $sql = "INSERT INTO `walker` (`id_user`, `name`, `photo`, `description`, `id_location`, `id_schedule`, `price`)
                 VALUES ($id_user, '$name', '$photo', '$description', $id_location, $id_schedule, $price);";
         $mysql_result = $conn->query($sql);
 
@@ -368,50 +375,55 @@
         stop_db_connection($conn);
     }
 
-    function delete_walker_account($id_user, $id_walker) {
+    function delete_walker_account($id_user) {
         $conn = start_db_connection();
 
         $sql = "SELECT `id`
-                FROM `match`
-                WHERE id_walker = $id_walker;";
+                FROM `walker`
+                WHERE `id_user` = $id_user;";
         $mysql_result = $conn->query($sql);
-        
-        while ($row = $mysql_result->fetch_row()) {
-            $id_match = $row[0];
 
+        if ($row = $mysql_result->fetch_row()) {
+            $id_walker = $row[0];
+
+            $sql = "SELECT `id`
+                    FROM `match`
+                    WHERE id_walker = $id_walker;";
+            $mysql_result = $conn->query($sql);
+    
             $sql = "DELETE FROM `message`
-                    WHERE `id_match` = $id_match;";
+                    WHERE `id_user` = $id_user;";
+            $mysql_result = $conn->query($sql);
+    
+            $sql = "DELETE FROM `match`
+                    WHERE `id_walker` = $id_walker;";
+            $mysql_result = $conn->query($sql);
+    
+            $sql = "DELETE FROM `request`
+                    WHERE `id_walker` = $id_walker;";
+            $mysql_result = $conn->query($sql);
+
+            $sql = "SELECT `id_location`, `id_schedule`
+                    FROM `walker`
+                    WHERE id = $id_walker;";
+            $mysql_result = $conn->query($sql);
+
+            $row = $mysql_result->fetch_row();
+            $id_location = $row[0];
+            $id_schedule = $row[1];
+
+            $sql = "DELETE FROM `walker`
+                    WHERE `id` = $id_walker;";
+            $mysql_result = $conn->query($sql);
+    
+            $sql = "DELETE FROM `location`
+                    WHERE `id` = $id_location;";
+            $mysql_result = $conn->query($sql);
+            
+            $sql = "DELETE FROM `schedule`
+                    WHERE `id` = $id_schedule;";
             $mysql_result = $conn->query($sql);
         }
-
-        $sql = "DELETE FROM `match`
-                WHERE `id_walker` = $id_walker;";
-        $mysql_result = $conn->query($sql);
-
-        $sql = "DELETE FROM `request`
-                WHERE `id_walker` = $id_walker;";
-        $mysql_result = $conn->query($sql);
-
-        $sql = "SELECT `id_location`, `id_schedule`
-                FROM `walker`
-                WHERE id = $id_walker;";
-        $mysql_result = $conn->query($sql);
-
-        $row = $mysql_result->fetch_row();
-        $id_location = $row[0];
-        $id_schedule = $row[1];
-
-        $sql = "DELETE FROM `location`
-                WHERE `id` = $id_location;";
-        $mysql_result = $conn->query($sql);
-        
-        $sql = "DELETE FROM `schedule`
-                WHERE `id` = $id_schedule;";
-        $mysql_result = $conn->query($sql);
-
-        $sql = "DELETE FROM `walker`
-                WHERE `id` = $id_walker;";
-        $mysql_result = $conn->query($sql);
 
         $sql = "DELETE FROM `user`
                 WHERE id = $id_user;";

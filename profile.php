@@ -16,7 +16,7 @@
     }
 
     function get_data() {
-        global $curr_dog, $dogs, $walker;
+        global $has_profile, $curr_dog, $dogs, $walker;
 
         $id = $_SESSION["id"];
         $type = $_SESSION["type"];
@@ -45,9 +45,14 @@
                 "size" => ""
             );
 
+            if (count($dogs) > 1) {
+                $has_profile = True;
+            } else {
+                $has_profile = False;
+            }
             
-            if (isset($_GET["id"])) {
-                $curr_dog = $_REQUEST["id"];    
+            if (isset($_GET["id_dog"])) {
+                $curr_dog = $_REQUEST["id_dog"];    
             } else {
                 $curr_dog = array_key_first($dogs);
             }
@@ -56,6 +61,8 @@
 
             $walker = $mysql_result->fetch_assoc();
             if (!$walker) {
+                $has_profile = False;
+
                 $walker = array(
                     "id" => -1,
                     "user_id" => $id,
@@ -72,6 +79,8 @@
                     "price" => 1
                 );
             } else {
+                $has_profile = True;
+
                 $days = $walker["days"];
                 $walker["days"] = json_decode($days, true);
 
@@ -82,17 +91,19 @@
     }
 
     function draw_page() {
+        global $has_profile, $curr_dog, $dogs, $walker;
+
         $modal = get_modal();
 
         $username = $_SESSION["username"];
         $type = $_SESSION["type"];
-        
+
         if ($type == "owner") {
-            $photo = "default-dog.jpg";
             $content = get_content_owner();
+            $photo = ($has_profile) ? $dogs[$curr_dog]["photo"] : "default-dog.jpg";
         } else {
-            $photo = "default-person.jpg";
             $content = get_content_walker();
+            $photo = ($has_profile) ? $walker["photo"] : "default-person.jpg";
         }
 
         $page = <<<PAGE
@@ -203,6 +214,7 @@
                             }
                         }
 
+                        // Update Location Iframe
                         function update_iframe(e) {
                             let name = e.target.value;
                             
@@ -214,6 +226,22 @@
                             let map = document.querySelector("#map");
 
                             map.src = url;
+                        }
+
+                        // Confirm Delete Account
+                        function confirm_delete_account() {
+                            const urlParams = new URLSearchParams(window.location.search);
+                            urlParams.set("confirm-delete-account", true);
+    
+                            window.location.search = urlParams;
+                        }
+
+                        // Delete Account
+                        function delete_account(id_user) {
+                            const urlParams = new URLSearchParams(window.location.search);
+                            urlParams.set("delete-account", true);
+    
+                            window.location.search = urlParams;
                         }
                     </script>
 
@@ -232,53 +260,166 @@ PAGE;
     }
     
     function check_request() {
-        global $walker;
+        global $curr_dog, $dogs, $walker, $locations;
+
+        require_once("data/locations.php");
 
         $id = $_SESSION["id"];
         $type = $_SESSION["type"];
         
-        if ($type == "owner") {
+        // Delete Account
+        if (isset($_GET["delete-account"])) {
+            try {
+                if ($type == "owner") {
+                    delete_owner_account($id);
+                } else {
+                    delete_walker_account($id);
+                }
 
-        } else {
-            if (isset($_POST["name"]) && isset($_POST["photo"]) && isset($_POST["description"]) && isset($_POST["price"]) && isset($_POST["location"]) && isset($_POST["days"]) && isset($_POST["hours"])) {
-                require_once("data/locations.php");
+                trigger_logout();
+            } catch (Exception $error) {
+                show_modal("danger", "<i class='fa-solid fa-triangle-exclamation'></i> Error", "<h5>Lo sentimos, hubo un error al tratar de borrar tu cuenta. Por favor, intentalo nuevamente más tarde.</h5>", "", "['confirm-delete-account', 'confirm-delete']");
+            }
+
+            return false;
+        } else if (isset($_GET["confirm-delete-account"])) {
+            show_modal("danger", "<i class='fa-solid fa-triangle-exclamation'></i> Borrar", "<h5>¿Estas seguro que quieres borrar <span class='text-danger'>tu cuenta</span>?</h5>", "<button class='btn btn-danger' type='button' onclick='delete_account({$id});'>Aceptar</button><button class='btn btn-secondary' type='button' onclick='hide_modal();'>Cancelar</button>", "['confirm-delete-account', 'confirm-delete']");
+
+            return false;
+        }
+        
+        if ($type == "owner") {
+            // Create or Update dog
+            if (isset($_POST["action"]) && isset($_POST["name"]) && isset($_POST["description"]) && isset($_POST["sex"]) && isset($_POST["breed"]) && isset($_POST["size"]) && isset($_POST["location"])) {
+                $action = $_REQUEST["action"];
                 
-                $id_walker = $walker["id"];
+                $name = $_REQUEST["name"];
+                $description = $_REQUEST["description"];
+
+                $sex = $_REQUEST["sex"];
+                $breed = $_REQUEST["breed"];
+                $size = $_REQUEST["size"];
+                
+                $loc = $_REQUEST["location"];
+                $location = $locations[$loc]["name"];
+                $latitude = $locations[$loc]["latitude"];
+                $longitude = $locations[$loc]["longitude"];
+
+                if ($_FILES["photo"]["size"] == 0) {
+                    $filename = ($action == "create") ? "default-dog.jpg" : $dogs[$curr_dog]["photo"];
+                } else {
+                    $timestamp = time();
+                    $extension = explode(".", $_FILES["photo"]["name"]);
+                    $extension = end($extension);
+                    $filename = "$id-$timestamp.$extension";
+                    
+                    move_uploaded_file($_FILES["photo"]["tmp_name"], "img/$filename");
+                }
+
+                if ($action == "create") {
+                    try {
+                        add_dog($id, $name, $filename, $description, $sex, $breed, $size, $location, $latitude, $longitude);
+            
+                        show_modal("success", "<i class='fa-solid fa-triangle-exclamation'></i> Perrito Agregado", "<h5>¡Se ha agregado a <span class='text-success'>$name</span> a tu lista de perritos!</h5>", "", "[]");
+                    } catch (Exception $error) {
+                        show_modal("danger", "<i class='fa-solid fa-triangle-exclamation'></i> Error", "<h5>Lo sentimos, hubo un error al tratar de agregar al perrito. Por favor, intentalo nuevamente más tarde.</h5>", "", "[]");
+                    }
+                } else if ($action == "edit" && isset($dogs[$curr_dog]) && $curr_dog > 0) {
+                    $id_location = $dogs[$curr_dog]["id_location"];
+                    $name_dog = $dogs[$curr_dog]["name"];
+                    
+                    try {
+                        update_dog_profile($curr_dog, $name, $filename, $description, $sex, $breed, $size, $id_location, $location, $latitude, $longitude);
+            
+                        show_modal("success", "<i class='fa-solid fa-triangle-exclamation'></i> Perrito Editado", "<h5>¡Se han editado los detalles de <span class='text-success'>$name_dog</span> con exito!</h5>", "", "[]");
+                    } catch (Exception $error) {
+                        show_modal("danger", "<i class='fa-solid fa-triangle-exclamation'></i> Error", "<h5>Lo sentimos, hubo un error al tratar de editar al perrito. Por favor, intentalo nuevamente más tarde.</h5>", "", "[]");
+                    }
+                }
+            }
+
+            // Delete Dog
+            if (isset($_GET["id_dog"]) && isset($_GET["delete-dog"])) {
+                $id_dog = $_REQUEST["id_dog"];
+
+                if ($id_dog < 0) {
+                    return false;
+                }
+
+                $name_dog = $dogs[$id_dog]["name"];
+
+                try {
+                    delete_dog($id_dog);
+        
+                    show_modal("success", "<i class='fa-solid fa-triangle-exclamation'></i> Perrito Borrado", "<h5>¡Se ha borrado a <span class='text-danger'>$name_dog</span> con exito!</h5>", "", "['id_user', 'connect', 'confirm-delete-dog', 'delete-dog', 'id']");
+                } catch (Exception $error) {
+                    show_modal("danger", "<i class='fa-solid fa-triangle-exclamation'></i> Error", "<h5>Lo sentimos, hubo un error al tratar de borrar al perrito. Por favor, intentalo nuevamente más tarde.</h5>", "", "['id_user', 'connect', 'confirm-delete-dog', 'delete-dog', 'id']");
+                }
+            } else if (isset($_GET["id_dog"]) && isset($_GET["confirm-delete-dog"])) {
+                $id_dog = $_REQUEST["id_dog"];
+
+                if ($id_dog < 0) {
+                    return false;
+                }
+
+                $name_dog = $dogs[$id_dog]["name"];
+
+                show_modal("danger", "<i class='fa-solid fa-triangle-exclamation'></i> Borrar", "<h5>¿Estas seguro que quieres borrar a <span class='text-danger'>{$name_dog}</span>?</h5>", "<button class='btn btn-danger' type='button' onclick='delete_dog({$id_dog});'>Aceptar</button><button class='btn btn-secondary' type='button' onclick='hide_modal();'>Cancelar</button>", "['id_user', 'connect', 'confirm-delete-dog', 'delete-dog', 'id']");
+            }
+        } else {
+            // Create or Update Walker
+            if (isset($_POST["action"]) && isset($_POST["name"]) && isset($_POST["description"]) && isset($_POST["price"]) && isset($_POST["price"]) && isset($_POST["days"]) && isset($_POST["hours"]) && isset($_POST["location"])) {
+                $action = $_REQUEST["action"];
                 
                 $name = $_REQUEST["name"];
                 $description = $_REQUEST["description"];
                 $price = $_REQUEST["price"];
 
-                $photo = "$id-$id_walker";
-                move_uploaded_file($_FILES["fileToUpload"]["tmp_name"], "img/$photo");
-
-                $id_schedule = $walker["id_schedule"];
                 $days = $_REQUEST["days"];
+                $days = json_encode($days);
+
                 $hours = $_REQUEST["hours"];
-                
+                $hours = json_encode($hours);
+
+                $loc = $_REQUEST["location"];
+                $location = $locations[$loc]["name"];
+                $latitude = $locations[$loc]["latitude"];
+                $longitude = $locations[$loc]["longitude"];
+
+                if ($_FILES["photo"]["size"] == 0) {
+                    $filename = ($action == "create") ? "default-person.jpg" : $walker["photo"];
+                } else {
+                    $timestamp = time();
+                    $extension = explode(".", $_FILES["photo"]["name"]);
+                    $extension = end($extension);
+                    $filename = "$id-$timestamp.$extension";
+                    
+                    move_uploaded_file($_FILES["photo"]["tmp_name"], "img/$filename");
+                }
+
+                $id_walker = $walker["id"];
                 $id_location = $walker["id_location"];
-                $location = $_REQUEST["location"];
-                $latitude = $locations[$location];
-                $longitude = $locations[$location];
+                $id_schedule = $walker["id_schedule"];
 
                 if ($id_walker > -1) {
-                    add_walker($id, $name, $photo, $description, $price, $location, $latitude, $longitude, $days, $hours);
+                    try {
+                        update_walker_profile($id_walker, $name, $filename, $description, $price, $id_location, $location, $latitude, $longitude, $id_schedule, $days, $hours);
+            
+                        show_modal("success", "<i class='fa-solid fa-triangle-exclamation'></i> Perfil Editado", "<h5>¡Se ha editado tu perfil con exito!</h5>", "", "[]");
+                    } catch (Exception $error) {
+                        show_modal("danger", "<i class='fa-solid fa-triangle-exclamation'></i> Error", "<h5>Lo sentimos, hubo un error al tratar de editar tu perfil. Por favor, intentalo nuevamente más tarde.</h5>", "", "[]");
+                    }
                 } else {
-                    update_walker_profile($id_walker, $name, $photo, $description, $price, $id_location, $location, $latitude, $longitude, $id_schedule, $days, $hours);
+                    try {
+                        add_walker($id, $name, $filename, $description, $price, $location, $latitude, $longitude, $days, $hours);
+            
+                        show_modal("success", "<i class='fa-solid fa-triangle-exclamation'></i> Perfil Editado", "<h5>¡Se ha editado tu perfil con exito!</h5>", "", "[]");
+                    } catch (Exception $error) {
+                        show_modal("danger", "<i class='fa-solid fa-triangle-exclamation'></i> Error", "<h5>Lo sentimos, hubo un error al tratar de editar tu perfil. Por favor, intentalo nuevamente más tarde.</h5>", "", "[]");
+                    }
                 }
             }
         }
-        /*if (isset($_GET["id_dog"])) {
-            echo "owner";
-        }
-
-        if (isset($_GET["delete_account"])) {
-            $type = $_SESSION["type"];
-
-            if ($type == "owner") {
-            } else {
-            }
-        }*/
     }
 
     // Owner
@@ -287,9 +428,62 @@ PAGE;
         
         require_once("data/breeds.php");
         require_once("data/locations.php");
+        
+        if (isset($dogs[$curr_dog]) && $curr_dog > 0) {
+            $dog = $dogs[$curr_dog];
 
-        $dog = $dogs[$curr_dog];
-        $name = $dog["name"];
+            $name = $dog["name"];
+            $curr_name = $name;
+
+            $delete_dog = <<<DELETEDOG
+                <!-- Delete Dog Button -->
+                <li class="nav-item">
+                    <button id="btn-delete-dog" class="btn btn-danger" type="button" onclick="confirm_delete_dog({$curr_dog});">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </li>
+
+                <script type="text/javascript">
+                    // Confirm Delete Dog
+                    function confirm_delete_dog(id_dog) {
+                        const urlParams = new URLSearchParams(window.location.search);
+                        urlParams.set("confirm-delete-dog", true);
+                        urlParams.set("id_dog", id_dog);
+
+                        window.location.search = urlParams;
+                    }
+
+                    // Delete Dog
+                    function delete_dog(id_dog) {
+                        const urlParams = new URLSearchParams(window.location.search);
+                        urlParams.set("delete-dog", true);
+                        urlParams.set("id_dog", id_dog);
+
+                        window.location.search = urlParams;
+                    }
+                </script>
+DELETEDOG;
+
+            $button = "<input name='action' type='text' value='edit' hidden /><button class='btn btn-primary' name='submit' type='submit' value='GUARDAR'>GUARDAR</button>";
+        } else if (isset($dogs[$curr_dog])) {
+            $dog = $dogs[$curr_dog];
+
+            $name = "";
+            $curr_name = $dog["name"];
+            $delete_dog = "";
+
+            $button = "<input name='action' type='text' value='create' hidden /><button class='btn btn-success' name='submit' type='submit' value='Crear'>CREAR</button>";
+        } else {
+            $dog = end($dogs);
+            $curr_dog = $dog["id"];
+
+            $name = "";
+            $curr_name = $dog["name"];
+            $delete_dog = "";
+
+            $button = "<input name='action' type='text' value='create' hidden /><button class='btn btn-success' name='submit' type='submit' value='Crear'>CREAR</button>";
+        }
+        
         $photo = $dog["photo"];
         $description = $dog["description"];
 
@@ -323,23 +517,22 @@ PAGE;
         $latitude = $dog["latitude"];
         $longitude = $dog["longitude"];
         $location_data = $dog["location"];
-        foreach ($locations as $loc) {
+        foreach ($locations as $id_loc => $loc) {
             $value = $loc["name"];
             $lat = $loc["latitude"];
             $long = $loc["longitude"];
 
             $selected = ($value == $location_data) ? "selected" : "";
 
-            $location = $location . "<option id='location' value='$value' latitude='$lat' longitude='$long' $selected>$value</option>";
+            $location = $location . "<option id='location' value='$id_loc' latitude='$lat' longitude='$long' $selected>$value</option>";
         }
 
-        $curr_name = $dogs[$curr_dog]["name"];
         $dropdown = "";
-        foreach ($dogs as $dog_id => $dog) {
-            $id = $dog_id;
-            $name = $dog["name"];
+        foreach ($dogs as $d) {
+            $id_dog = $d["id"];
+            $name_dog = $d["name"];
 
-            $dropdown = $dropdown . "<a class='dropdown-item' href='?id=$id'>$name</a>";
+            $dropdown = $dropdown . "<a class='dropdown-item' href='?id_dog=$id_dog'>$name_dog</a>";
         }
 
         $content = <<<CONTENT
@@ -368,6 +561,7 @@ PAGE;
                                     <li class="nav-item" role="presentation">
                                         <button id="about-tab" class="nav-link active" data-toggle="tab" data-target="#about" type="button" role="tab" aria-controls="about" aria-selected="true">
                                             <i class="fa-solid fa-circle-info"></i>
+                                            <span id="error-about" class="text-danger font-weight-bold hide">*</span>
                                         </button>
                                     </li>
                 
@@ -375,6 +569,7 @@ PAGE;
                                     <li class="nav-item" role="presentation">
                                         <button id="characteristics-tab" class="nav-link" data-toggle="tab" data-target="#characteristics" type="button" role="tab" aria-controls="characteristics" aria-selected="false">
                                             <i class="fa-solid fa-dog"></i>
+                                            <span id="error-characteristics" class="text-danger font-weight-bold hide">*</span>
                                         </button>
                                     </li>
             
@@ -382,20 +577,16 @@ PAGE;
                                     <li class="nav-item" role="presentation">
                                         <button id="location-tab" class="nav-link" data-toggle="tab" data-target="#location" type="button" role="tab" aria-controls="location" aria-selected="false">
                                             <i class="fa-solid fa-location-dot"></i>
+                                            <span id="error-location" class="text-danger font-weight-bold hide">*</span>
                                         </button>
                                     </li>
-            
-                                    <!-- Delete Dog Button -->
-                                    <li class="nav-item">
-                                        <button id="btn-delete-dog" class="btn btn-danger" type="button" onclick="delete_dog();">
-                                            <i class="fa-solid fa-trash"></i>
-                                        </button>
-                                    </li>
+
+                                    {$delete_dog}
                                 </ul>
                             </div>
 
                             <!-- Tab Content -->
-                            <form class="card-body" class="user form needs-validation" name="profile" method="POST" enctype="multipart/form-data">
+                            <form class="card-body" class="user form" name="profile" method="POST" enctype="multipart/form-data" onsubmit="return validate_form();">
                                 <div id="myTabContent" class="tab-content">
                                     <!-- About Tab -->
                                     <div id="about" class="tab-pane fade show active" role="tabpanel" aria-labelledby="about-tab">
@@ -421,7 +612,7 @@ PAGE;
                                                         <label class="input-group-text" for="name">Nombre</label>
                                                     </div>
 
-                                                    <input id="name" class="form-control" name="name" type="text" placeholder="Escribe tu nombre..." value="{$name}" required />
+                                                    <input id="name" class="form-control" name="name" type="text" placeholder="Escribe el nombre del perrito..." value="{$name}" />
                                                 </fieldset>
             
                                                 <!-- Description -->
@@ -430,13 +621,13 @@ PAGE;
                                                         <label class="input-group-text form-label" for="description">Descripción</label>
                                                     </div>
 
-                                                    <textarea id="description" class="form-control" name="description" placeholder="Escribe una descripción..." value="{$description}" required></textarea>
+                                                    <textarea id="description" class="form-control" name="description" placeholder="Escribe una descripción para el perrito..." value="{$description}">{$description}</textarea>
                                                 </fieldset>
                                             </div>
                                         </div>
                                 
                                         <fieldset class="float-right">
-                                            <button class="btn btn-primary" type="button" onclick="change_tab('characteristics');">Siguiente</button>
+                                            <button class="btn btn-primary" type="button" onclick="change_tab('characteristics');">SIGUIENTE</button>
                                         </fieldset>
                                     </div>
                                     
@@ -450,7 +641,7 @@ PAGE;
                                                 </label>
                                             </div>
             
-                                            <select id="sex" class="selectpicker form-control border" data-live-search="false" data-live-search-style="startsWith" required>
+                                            <select id="sex" name="sex" class="selectpicker form-control border" data-live-search="false" data-live-search-style="startsWith">
                                                 {$sex}
                                             </select>
                                         </fieldset>
@@ -463,7 +654,7 @@ PAGE;
                                                 </label>
                                             </div>
 
-                                            <select id="breed" class="selectpicker form-control border" data-live-search="true" data-live-search-style="startsWith" required>
+                                            <select id="breed" name="breed" class="selectpicker form-control border" data-live-search="true" data-live-search-style="startsWith">
                                                 {$breed} 
                                             </select>
                                         </fieldset>
@@ -474,14 +665,14 @@ PAGE;
                                                 <label class="input-group-text form-label" for="size">Tamaño</label>
                                             </div>
             
-                                            <select id="size" class="selectpicker form-control border" data-live-search="false" data-live-search-style="startsWith" required>
+                                            <select id="size" name="size" class="selectpicker form-control border" data-live-search="false" data-live-search-style="startsWith">
                                                 {$size}
                                             </select>
                                         </fieldset>
                                         
                                         <fieldset class="float-right">
-                                            <button class="btn btn-secondary" type="button" onclick="change_tab('about');">Anterior</button>
-                                            <button class="btn btn-primary" type="button" onclick="change_tab('location');">Siguiente</button>
+                                            <button class="btn btn-secondary" type="button" onclick="change_tab('about');">ANTERIOR</button>
+                                            <button class="btn btn-primary" type="button" onclick="change_tab('location');">SIGUIENTE</button>
                                         </fieldset>
                                     </div>
             
@@ -493,7 +684,7 @@ PAGE;
                                                 <label class="input-group-text" for="location">Ubicación</label>
                                             </div>
 
-                                            <select id="location" class="selectpicker form-control border" data-live-search="true" data-live-search-style="startsWith" onchange="update_iframe(event);" required>
+                                            <select id="location" name="location" class="selectpicker form-control border" data-live-search="true" data-live-search-style="startsWith" onchange="update_iframe(event);">
                                                 {$location}
                                             </select>
                                         </fieldset>
@@ -501,20 +692,49 @@ PAGE;
                                         <iframe id="map" src="https://embed.waze.com/es/iframe?lat={$latitude}&lon={$longitude}&pin=1&zoom=17" height="300" style="width: 100%;" sandbox="allow-same-origin allow-scripts"></iframe>
                                         
                                         <fieldset class="float-right">
-                                            <button class="btn btn-secondary" type="button" onclick="change_tab('characteristics');">Anterior</button>
-                                            <button id="submit" class="btn btn-primary" name="submit" type="button" value="Guardar">Guardar</button>
+                                            <button class="btn btn-secondary" type="button" onclick="change_tab('characteristics');">ANTERIOR</button>
+                                            {$button}
                                         </fieldset>
                                     </div>
                                 </div>
-                            </div>
-                        </form>
+                            </form>
+                        </div>
                     </div>
 
                     <!-- Delete Account Button -->
-                    <button id="btn-delete-account" class="btn btn-danger mt-2" type="button" onclick="delete_account();">ELIMINAR CUENTA</button>
+                    <button id="btn-delete-account" class="btn btn-danger mt-2" type="button" onclick="confirm_delete_account();">ELIMINAR CUENTA</button>
                 </div>
             </div>
-        </div>
+
+            <script type="text/javascript">
+                function validate_form() {
+                    let profile = document.forms["profile"];
+                    let is_valid = true;
+
+                    if (profile.name.value && profile.description.value) {
+                        document.querySelector("#error-about").classList.add("hide");
+                    } else {
+                        document.querySelector("#error-about").classList.remove("hide");
+                        is_valid = false;
+                    }
+
+                    if (profile.sex.value && profile.breed.value && profile.size.value) {
+                        document.querySelector("#error-characteristics").classList.add("hide");
+                    } else {
+                        document.querySelector("#error-characteristics").classList.remove("hide");
+                        is_valid = false;
+                    }
+                    
+                    if (profile.location.value) {
+                        document.querySelector("#error-location").classList.add("hide");
+                    } else {
+                        document.querySelector("#error-location").classList.remove("hide");
+                        is_valid = false;
+                    }
+
+                    return is_valid;
+                }
+            </script>
 CONTENT;
 
         return $content;
@@ -522,7 +742,7 @@ CONTENT;
 
     // Walker
     function get_content_walker() {
-        global $walker;
+        global $has_profile, $walker;
         
         require_once("data/locations.php");
 
@@ -546,7 +766,7 @@ CONTENT;
             $value = $day["value"];
             $display = $day["display"];
 
-            $selected = in_array($value, $days_options) ? "selected" : "";
+            $selected = in_array($value, $days_data) ? "selected" : "";
 
             $days = $days . "<option id='days' value='$value' $selected>$display</option>";
         }
@@ -555,28 +775,34 @@ CONTENT;
         $hours_data = $walker["hours"];
         for ($h = 1; $h <= 24; $h++) {
             if ($h < 10) {
-                $display = "0$h:00";
+                $hour = "0$h:00";
             } else {
-                $display = "$h:00";
+                $hour = "$h:00";
             }
 
-            $selected = in_array($display, $hours_data) ? "selected" : "";
+            $selected = in_array($hour, $hours_data) ? "selected" : "";
 
-            $hours = $hours . "<option id='hours' value='$h' $selected>$display</option>";
+            $hours = $hours . "<option id='hours' value='$hour' $selected>$hour</option>";
         }
 
         $location = "";
         $latitude = $walker["latitude"];
         $longitude = $walker["longitude"];
         $location_data = $walker["location"];
-        foreach ($locations as $loc) {
+        foreach ($locations as $id_loc => $loc) {
             $value = $loc["name"];
             $lat = $loc["latitude"];
             $long = $loc["longitude"];
 
             $selected = ($value == $location_data) ? "selected" : "";
 
-            $location = $location . "<option id='location' value='$value' latitude='$lat' longitude='$long' $selected>$value</option>";
+            $location = $location . "<option id='location' value='$id_loc' latitude='$lat' longitude='$long' $selected>$value</option>";
+        }
+
+        if ($has_profile) {
+            $button = "<input name='action' type='text' value='edit' hidden /><button id='submit' class='btn btn-primary' name='submit' type='submit' value='GUARDAR'>GUARDAR</button>";
+        } else {
+            $button = "<input name='action' type='text' value='create' hidden /><button id='submit' class='btn btn-primary' name='submit' type='submit' value='GUARDAR'>GUARDAR</button>";
         }
 
         $content = <<<CONTENT
@@ -597,6 +823,7 @@ CONTENT;
                                     <li class="nav-item" role="presentation">
                                         <button id="about-tab" class="nav-link active" data-toggle="tab" data-target="#about" type="button" role="tab" aria-controls="about" aria-selected="true">
                                             <i class="fa-solid fa-circle-info"></i>
+                                            <span id="error-about" class="text-danger font-weight-bold hide">*</span>
                                         </button>
                                     </li>
 
@@ -604,6 +831,7 @@ CONTENT;
                                     <li class="nav-item" role="presentation">
                                         <button id="availability-tab" class="nav-link" data-toggle="tab" data-target="#availability" type="button" role="tab" aria-controls="availability" aria-selected="false">
                                             <i class="fa-solid fa-business-time"></i>
+                                            <span id="error-availability" class="text-danger font-weight-bold hide">*</span>
                                         </button>
                                     </li>
 
@@ -611,13 +839,14 @@ CONTENT;
                                     <li class="nav-item" role="presentation">
                                         <button id="location-tab" class="nav-link" data-toggle="tab" data-target="#location" type="button" role="tab" aria-controls="location" aria-selected="false">
                                             <i class="fa-solid fa-location-dot"></i>
+                                            <span id="error-location" class="text-danger font-weight-bold hide">*</span>
                                         </button>
                                     </li>
                                 </ul>
                             </div>
 
                             <!-- Tab Content -->
-                            <form class="card-body" class="user form needs-validation" name="profile" method="POST" enctype="multipart/form-data">
+                            <form class="card-body" class="user form" name="profile" method="POST" enctype="multipart/form-data" onsubmit="return validate_form();">
                                 <div id="myTabContent" class="tab-content">
                                     <!-- About Tab -->
                                     <div id="about" class="tab-pane fade show active" role="tabpanel" aria-labelledby="about-tab">
@@ -643,7 +872,7 @@ CONTENT;
                                                         <label class="input-group-text" for="name">Nombre</label>
                                                     </div>
 
-                                                    <input id="name" class="form-control" name="name" type="text" placeholder="Escribe tu nombre..." value="{$name}" required />
+                                                    <input id="name" class="form-control" name="name" type="text" placeholder="Escribe tu nombre..." value="{$name}" />
                                                 </fieldset>
 
                                                 <!-- Description -->
@@ -652,13 +881,13 @@ CONTENT;
                                                         <label class="input-group-text form-label" for="description">Descripción</label>
                                                     </div>
 
-                                                    <textarea id="description" class="form-control" name="description" placeholder="Escribe una descripción..." value="{$description}" required></textarea>
+                                                    <textarea id="description" class="form-control" name="description" placeholder="Escribe una descripción..." value="{$description}">{$description}</textarea>
                                                 </fieldset>
                                             </div>
                                         </div>
                                         
                                         <fieldset class="float-right">
-                                            <button class="btn btn-primary" type="button" onclick="change_tab('availability');">Siguiente</button>
+                                            <button class="btn btn-primary" type="button" onclick="change_tab('availability');">SIGUIENTE</button>
                                         </fieldset>
                                     </div>
 
@@ -672,7 +901,7 @@ CONTENT;
                                                 </label>
                                             </div>
 
-                                            <input id="price" class="form-control" name="price" type="number" min="1" placeholder="250" value="{$price}" required />
+                                            <input id="price" class="form-control" name="price" type="number" min="1" placeholder="250" value="{$price}" />
                                         </fieldset>
 
                                         <!-- Days -->
@@ -683,7 +912,7 @@ CONTENT;
                                                 </label>
                                             </div>
 
-                                            <select id="days" class="selectpicker form-control border" data-live-search="true" data-live-search-style="startsWith" multiple required>
+                                            <select id="days" name="days[]" class="selectpicker form-control border" data-live-search="true" data-live-search-style="startsWith" multiple>
                                                 {$days}
                                             </select>
                                         </fieldset>
@@ -696,14 +925,14 @@ CONTENT;
                                                 </label>
                                             </div>
 
-                                            <select id="hours" class="selectpicker form-control border" data-live-search="true" data-live-search-style="startsWith" multiple required>
+                                            <select id="hours" name="hours[]" class="selectpicker form-control border" data-live-search="true" data-live-search-style="startsWith" multiple>
                                                 {$hours}
                                             </select>
                                         </fieldset>
                                         
                                         <fieldset class="float-right">
-                                            <button class="btn btn-secondary" type="button" onclick="change_tab('about');">Anterior</button>
-                                            <button class="btn btn-primary" type="button" onclick="change_tab('location');">Siguiente</button>
+                                            <button class="btn btn-secondary" type="button" onclick="change_tab('about');">ANTERIOR</button>
+                                            <button class="btn btn-primary" type="button" onclick="change_tab('location');">SIGUIENTE</button>
                                         </fieldset>
                                     </div>
                                     
@@ -715,7 +944,7 @@ CONTENT;
                                                 <label class="input-group-text" for="location">Ubicación</label>
                                             </div>
 
-                                            <select id="location" class="selectpicker form-control border" data-live-search="true" data-live-search-style="startsWith" onchange="update_iframe(event);" required>
+                                            <select id="location" name="location" class="selectpicker form-control border" data-live-search="true" data-live-search-style="startsWith" onchange="update_iframe(event);">
                                                 {$location}
                                             </select>
                                         </fieldset>
@@ -723,8 +952,8 @@ CONTENT;
                                         <iframe id="map" src="https://embed.waze.com/es/iframe?lat={$latitude}&lon={$longitude}&pin=1&zoom=17" height="300" style="width: 100%;" sandbox="allow-same-origin allow-scripts"></iframe>
                                         
                                         <fieldset class="float-right">
-                                            <button class="btn btn-secondary" type="button" onclick="change_tab('availability');">Anterior</button>
-                                            <button id="submit" class="btn btn-primary" name="submit" type="button" value="Guardar">Guardar</button>
+                                            <button class="btn btn-secondary" type="button" onclick="change_tab('availability');">ANTERIOR</button>
+                                            {$button}
                                         </fieldset>
                                     </div>
                                 </div>
@@ -733,9 +962,39 @@ CONTENT;
                     </div>
 
                     <!-- Delete Account Button -->
-                    <button id="btn-delete-account" class="btn btn-danger mt-2" type="button" onclick="delete_account();">ELIMINAR CUENTA</button>
+                    <button id="btn-delete-account" class="btn btn-danger mt-2" type="button" onclick="confirm_delete_account();">ELIMINAR CUENTA</button>
                 </div>
             </div>
+
+            <script type="text/javascript">
+                function validate_form() {
+                    let profile = document.forms["profile"];
+                    let is_valid = true;
+
+                    if (profile.name.value && profile.description.value) {
+                        document.querySelector("#error-about").classList.add("hide");
+                    } else {
+                        document.querySelector("#error-about").classList.remove("hide");
+                        is_valid = false;
+                    }
+
+                    if (profile.price.value && profile.days.value && profile.hours.value) {
+                        document.querySelector("#error-availability").classList.add("hide");
+                    } else {
+                        document.querySelector("#error-availability").classList.remove("hide");
+                        is_valid = false;
+                    }
+                    
+                    if (profile.location.value) {
+                        document.querySelector("#error-location").classList.add("hide");
+                    } else {
+                        document.querySelector("#error-location").classList.remove("hide");
+                        is_valid = false;
+                    }
+
+                    return is_valid;
+                }
+            </script>
 CONTENT;
 
         return $content;

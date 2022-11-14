@@ -1,16 +1,16 @@
 <?php
     if (isset($_GET["logout"])) {
+        trigger_logout();
+    }
+
+    function trigger_logout() {
         unset($_SESSION["id"]);
         unset($_SESSION["username"]);
         unset($_SESSION["type"]);
         unset($_SESSION["instant"]);
 
         session_destroy();
-        
-        trigger_logout();
-    }
 
-    function trigger_logout() {
         $logout_action = <<<LOGOUT
             <script type='text/javascript'>
                 function logout() {

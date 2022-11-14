@@ -19,7 +19,7 @@
     }
 
     function get_data() {
-        global $has_profile, $curr_dog, $dogs, $curr_walker, $walkers;
+        global $has_profile, $curr_dog, $dogs, $curr_walker, $walker, $walkers;
 
         $id_user = $_SESSION["id"];
         $type = $_SESSION["type"];
@@ -73,17 +73,17 @@
     }
 
     function draw_page() {
-        global $curr_dog, $dogs;
+        global $has_profile, $curr_dog, $dogs, $walker;
 
         $type = $_SESSION["type"];
         $username = $_SESSION["username"];
         
         if ($type == "owner") {
             $content = get_content_owners();
-            $photo = $dogs[$curr_dog]["photo"];
+            $photo = ($has_profile) ? $dogs[$curr_dog]["photo"] : "default-dog.jpg";
         } else {
             $content = get_content_walkers();
-            $photo = "default-person.jpg"; // CAMBIAR
+            $photo = ($has_profile) ? $walker["photo"] : "default-person.jpg";
         }
         
         $modal = get_modal();

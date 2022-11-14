@@ -20,8 +20,8 @@ CREATE TABLE `schedule` (
 CREATE TABLE `location` (
     `id` int NOT NULL AUTO_INCREMENT,
     `name` varchar(25) NOT NULL,
-    `latitude` INT NOT NULL,
-    `longitude` INT NOT NULL,
+    `latitude` FLOAT NOT NULL,
+    `longitude` FLOAT NOT NULL,
     PRIMARY KEY (`id`)
 );
 
