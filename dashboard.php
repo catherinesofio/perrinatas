@@ -49,7 +49,11 @@
             
 
             // Walkers List
-            $mysql_result = get_unmatched_walkers($curr_dog);
+            $dog = $dogs[$id_dog];
+            $latitude = $dog["latitude"];
+            $longitude = $dog["longitude"];
+
+            $mysql_result = get_unmatched_walkers($curr_dog, $latitude, $longitude);
             
             $walkers = array();
             while ($walker = $mysql_result->fetch_assoc()) {
@@ -63,7 +67,10 @@
 
 
             // Dogs List
-            $mysql_result = get_unmatched_dogs($curr_walker);
+            $latitude = $walker["latitude"];
+            $longitude = $walker["longitude"];
+
+            $mysql_result = get_unmatched_dogs($curr_walker, $latitude, $longitude);
 
             $dogs = array();
             while ($dog = $mysql_result->fetch_assoc()) {

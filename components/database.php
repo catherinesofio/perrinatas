@@ -81,8 +81,10 @@
     function get_dogs($id_user) {
         $conn = start_db_connection();
 
-        $sql = "SELECT `id`, `name`, `photo`
+        $sql = "SELECT dog.id, dog.name, dog.photo, location.latitude, location.longitude
                 FROM `dog`
+                INNER JOIN `location`
+                    ON location.id = dog.id_location
                 WHERE `id_user` = $id_user;";
         $mysql_result = $conn->query($sql);
 
@@ -91,18 +93,19 @@
         return $mysql_result;
     }
 
-    function get_unmatched_dogs($id_walker) {
+    function get_unmatched_dogs($id_walker, $latitude, $longitude) {
         $conn = start_db_connection();
 
-        $sql = "SELECT dog.id, dog.id_user, dog.name, dog.photo, dog.description, location.name as location, location.latitude, location.longitude, dog.sex, dog.breed, dog.size
+        // https://en.wikipedia.org/wiki/Haversine_formula
+        $sql = "SELECT dog.id, dog.id_user, dog.name, dog.photo, dog.description, location.name as location, location.latitude, location.longitude, dog.sex, dog.breed, dog.size, (ACOS((SIN(location.latitude) * SIN($latitude)) + (COS(location.latitude) * COS($latitude) * COS(location.longitude - $longitude))) * 6371) AS distance
                 FROM `dog`
                 INNER JOIN `location`
                     ON location.id = dog.id_location
                 WHERE dog.id NOT IN (
                     SELECT id_dog
                     FROM `match`
-                    WHERE id_walker = $id_walker
-                );";
+                    WHERE id_walker = $id_walker)
+                ORDER BY distance ASC;";
         $mysql_result = $conn->query($sql);
 
         stop_db_connection($conn);
@@ -261,8 +264,10 @@
     function get_walker($id_user) {
         $conn = start_db_connection();
 
-        $sql = "SELECT `id`, `name`, `photo`
+        $sql = "SELECT walker.id, walker.name, walker.photo, location.latitude, location.longitude 
                 FROM `walker`
+                INNER JOIN `location`
+                    ON location.id = walker.id_location
                 WHERE `id_user` = $id_user;";
         $mysql_result = $conn->query($sql);
         $walker = $mysql_result->fetch_assoc();
@@ -272,10 +277,11 @@
         return $walker;
     }
 
-    function get_unmatched_walkers($id_dog) {
+    function get_unmatched_walkers($id_dog, $latitude, $longitude) {
         $conn = start_db_connection();
 
-        $sql = "SELECT walker.id, walker.id_user, walker.name, walker.photo, walker.description, location.name as location, location.latitude, location.longitude, schedule.days, schedule.hours, walker.price
+        // https://en.wikipedia.org/wiki/Haversine_formula
+        $sql = "SELECT walker.id, walker.id_user, walker.name, walker.photo, walker.description, location.name as location, location.latitude, location.longitude, schedule.days, schedule.hours, walker.price, (ACOS((SIN(location.latitude) * SIN($latitude)) + (COS(location.latitude) * COS($latitude) * COS(location.longitude - $longitude))) * 6371) AS distance
                 FROM `walker`
                 INNER JOIN `location`
                     ON location.id = walker.id_location
@@ -284,8 +290,8 @@
                 WHERE walker.id NOT IN (
                     SELECT id_walker
                     FROM `match`
-                    WHERE id_dog = $id_dog
-                );";
+                    WHERE id_dog = $id_dog)
+                ORDER BY distance ASC;";
         $mysql_result = $conn->query($sql);
 
         stop_db_connection($conn);
