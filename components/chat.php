@@ -143,6 +143,8 @@ CHAT;
     }
 
     function get_contact($data) {
+        global $curr_dog;
+
         $id_user = $data["id"];
         $id_match = $data["id_match"];
         $photo = $data["photo"];
@@ -156,12 +158,14 @@ CHAT;
             $content = "¡Te has conectado con $name, ya pueden charlar!";
         }
 
+        $id_dog = ($curr_dog > 0) ? "&id=$curr_dog" : "";
+
         $datetime = date("h:i A | j M", strtotime($datetime));
 
         $contact = <<<CONTACT
             <li id="{$id_contact}" class="contact p-2 border-bottom row">
                 <div class="col-flex align-self-center">
-                    <a href="?id_user={$id_user}" class="btn btn-light" type="button">
+                    <a href="?id_user={$id_user}{$id_dog}" class="btn btn-light" type="button">
                         <img class="avatar d-flex align-self-center me-3" src="img/{$photo}" alt="avatar">
                     </a>
                 </div>
