@@ -41,7 +41,7 @@
         }
 
         $card = <<<CARD
-            <div class="card shadow mb-4" style="width: 18rem;">
+            <div class="card shadow mb-4 h-100" style="width: 18rem;">
                 <a href="#" id_user="{$id}" onclick="show_modal_profile(event);">
                     <div class="card-header py-3">
                         <h6 class="m-0 font-weight-bold text-primary">
@@ -80,14 +80,14 @@ CARD;
         $location = $data["location"];
 
         $sex = $data["sex"];
-        if ($sex == "f") {
+        if ($sex == "F") {
             $sex = "<i class='fa-solid fa-venus float-right'></i>";
         } else {
             $sex = "<i class='fa-solid fa-mars float-right'></i>";
         }
 
         $card = <<<CARD
-            <div class="card shadow mb-4" style="width: 18rem;">
+            <div class="card shadow mb-4 h-100" style="width: 18rem;">
                 <a href="#" id_user="{$id}" onclick="show_modal_profile(event);">
                     <div class="card-header py-3">
                         <h6 class="m-0 font-weight-bold text-primary">{$name}{$sex}</h6>

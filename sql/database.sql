@@ -82,7 +82,6 @@ CREATE TABLE `message` (
     `id_user` INT NOT NULL,
     `content` varchar(255),
     `datetime` datetime NOT NULL,
-    `read` boolean NOT NULL,
     FOREIGN KEY ( `id_match`) REFERENCES `match`(`id`) ON UPDATE RESTRICT,
     FOREIGN KEY ( `id_user`) REFERENCES `user`(`id`) ON UPDATE RESTRICT,
     PRIMARY KEY (`id`)

@@ -536,8 +536,8 @@
 
         $datetime = date('Y-m-d H:i:s');
 
-        $sql = "INSERT INTO `message` (`id_match`, `id_user`, `content`, `datetime`, `read`)
-                VALUES ($id_match, $id_user, '$message', '$datetime', false);";
+        $sql = "INSERT INTO `message` (`id_match`, `id_user`, `content`, `datetime`)
+                VALUES ($id_match, $id_user, '$message', '$datetime');";
         $mysql_result = $conn->query($sql);
 
         stop_db_connection($conn);

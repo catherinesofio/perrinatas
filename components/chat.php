@@ -1,5 +1,5 @@
 <?php
-    function get_chat($contacts, $chats, $photo_user) {
+    function get_chat($contacts, $chats, $photo_user, $id_match) {
         global $id_user;
 
         if (count($contacts) > 0) {
@@ -13,6 +13,18 @@
             
             foreach ($chats as $chat) {
                 $messages = $messages . get_message($chat, $photo_user);
+            }
+
+            if ($id_match) {
+                $trigger_chat = <<<TRIGGERCHAT
+                    window.onload = function() {
+                        change_tab("messages");
+                        filter_messages({$id_match});
+                        scroll_bottom("scrolleable");
+                    }
+TRIGGERCHAT;
+            } else {
+                $trigger_chat = "";
             }
 
             $chat = <<<CHAT
@@ -113,6 +125,8 @@
                         messages = document.querySelectorAll(".message:not([id*=" + value + "])");
                         messages.forEach(message => message.classList.add("hide"));
                     }
+
+                    {$trigger_chat}
                 </script>
 CHAT;
         } else {

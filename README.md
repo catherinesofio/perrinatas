@@ -1,9 +1,9 @@
-// Perrinatas ©
+# Perrinatas ©
 *¡Conectando paseadores con perritos desde 2022!*
 
 <br>
 
-#// Descripción
+## Descripción
 **Perrinatas ©** es una aplicación para conectar dueños de perritos con paseadores cercanos a la zona.
 
 Hay 2 tipos de usuarios:
@@ -16,15 +16,15 @@ Cabe destacar que todo lo relacionado a transacciones se van a realizar por fuer
 
 <br>
 
-#// Pantallas
-##// Iniciar Sesión
+## Pantallas
+### Iniciar Sesión
 
 ![Iniciar Sesión](https://drive.google.com/uc?export=view&id=1EMOi6qwiji69ozcp06RfIaUg8wxTrlcr)
 
-##// Registrarse
+### Registrarse
 ![Registrarse](https://drive.google.com/uc?export=view&id=1CMmY8xAUObV_8wf-zp1M_jBHaRl_2aIS)
 
-##// Dashboard
+### Dashboard
 Dónde te aparecen las posibles conexiones.
 
 - **🐕 Dueños de perritos:**
@@ -39,7 +39,7 @@ Dónde te aparecen las posibles conexiones.
 
 ![Dashboard - Ver Perfil](https://drive.google.com/uc?export=view&id=17MsArr08WISbAakZARotDGWHC2xsWJVL)
 
-##// Conexiones
+### Conexiones
 Las conexiones que hiciste, con las cuáles podes iniciar/continuar una conversación y volver a revisar su perfil
 
 - **🐕 Dueños de perritos:**
@@ -54,7 +54,7 @@ Las conexiones que hiciste, con las cuáles podes iniciar/continuar una conversa
 
 ![Conexiones - Ver Perfil](https://drive.google.com/uc?export=view&id=1cjSdiuEtYnAkGIOZ541kswEoT4J5LQe9)
 
-##// Perfil
+### Perfil
 Contiene información sobre el usuario que se puede cambiar.
 
 Para los usuarios dueños de perritos, puede ser que este perfil cambie un poco ya que, aparte de los datos generales de la cuenta, van a tener que poder hacer subperfiles para sus perritos.
@@ -69,11 +69,11 @@ Para los usuarios dueños de perritos, puede ser que este perfil cambie un poco 
 
 <br>
 
-#// Referencias
+## Referencias
 - Tinder
 - Mercado Libre
 
 <br>
 
-#// Colaboradores
+## Colaboradores
 - Catalina Sofio Avogadro

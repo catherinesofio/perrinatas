@@ -25,7 +25,9 @@
 
 .avatar {
     width: 60px;
-    border-radius: 100px;
+    height: 60px;
+    border-radius: 50%;
+    overflow: hidden;
 }
 
 .custom-height {
